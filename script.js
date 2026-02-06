@@ -2,6 +2,9 @@
 const GITHUB_API_URL = 'https://api.github.com';
 const GITHUB_USERNAME = window.GITHUB_USERNAME || 'username'; // Read from environment or use placeholder
 
+// Import utility functions
+import { formatRepoTitle } from './utils.js';
+
 // DOM Elements
 const searchInput = document.getElementById('searchInput');
 const languageFilter = document.getElementById('languageFilter');
@@ -76,10 +79,11 @@ function renderRepositories() {
 
 // Create a repository card HTML
 function createRepoCard(repo) {
+    const formattedTitle = formatRepoTitle(repo.name);
     return `
         <div class="repo-card">
             <div class="repo-header">
-                <h2>${escapeHtml(repo.name)}</h2>
+                <h2>${escapeHtml(formattedTitle)}</h2>
                 <div class="repo-stats">
                     <div class="language-badges">
                         ${getLanguageBadges(repo.languages)}
@@ -93,8 +97,8 @@ function createRepoCard(repo) {
                         Updated ${formatDate(repo.updated_at)}
                     </span>
                 </div>
-                ${repo.homepage ? `<button class="repo-homepage" onclick="openHomepageModal('${escapeHtml(repo.homepage)}', '${escapeHtml(repo.name)}')">Homepage</button>` : ''}
-                ${repo.hasReadme ? `<button class="repo-readme" onclick="console.log('README button clicked for repo:', '${escapeHtml(repo.name)}'); openReadmeModal('${escapeHtml(repo.name)}')">README</button>` : ''}
+                ${repo.homepage ? `<button class="repo-homepage" onclick="openHomepageModal('${escapeHtml(repo.homepage)}', '${escapeHtml(formattedTitle)}')">Homepage</button>` : ''}
+                ${repo.hasReadme ? `<button class="repo-readme" onclick="console.log('README button clicked for repo:', '${escapeHtml(formattedTitle)}'); openReadmeModal('${escapeHtml(formattedTitle)}')">README</button>` : ''}
                 <a href="${escapeHtml(repo.html_url)}" class="repo-link" target="_blank" rel="noopener noreferrer">
                     View on GitHub
                 </a>
