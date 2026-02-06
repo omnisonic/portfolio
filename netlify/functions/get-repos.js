@@ -1,6 +1,7 @@
 exports.handler = async function (event, context) {
   const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
   const GITHUB_API_URL = 'https://api.github.com';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
   if (!GITHUB_USERNAME) {
     return {
@@ -12,7 +13,8 @@ exports.handler = async function (event, context) {
   try {
     const response = await fetch(`${GITHUB_API_URL}/users/${GITHUB_USERNAME}/repos`, {
       headers: {
-        'Accept': 'application/vnd.github.v3+json'
+        'Accept': 'application/vnd.github.v3+json',
+        ...(GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {})
       }
     });
 
@@ -25,15 +27,38 @@ exports.handler = async function (event, context) {
 
     const repositories = await response.json();
 
+    // Add homepageUrl to each repository
+    for (const repo of repositories) {
+      repo.homepageUrl = repo.homepage || '';
+    }
+
     // Sort repositories by date created (most recent first)
     repositories.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // Check if each repository has a README
+    for (const repo of repositories) {
+      try {
+        const readmeResponse = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_USERNAME}/${repo.name}/readme`, {
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            ...(GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {})
+          }
+        });
+
+        repo.hasReadme = readmeResponse.ok;
+      } catch (readmeError) {
+        console.error(`Error checking README for ${repo.name}:`, readmeError);
+        repo.hasReadme = false;
+      }
+    }
 
     // Fetch languages for each repository
     for (const repo of repositories) {
       try {
         const langResponse = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_USERNAME}/${repo.name}/languages`, {
           headers: {
-            'Accept': 'application/vnd.github.v3+json'
+            'Accept': 'application/vnd.github.v3+json',
+            ...(GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {})
           }
         });
 

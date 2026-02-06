@@ -1,7 +1,6 @@
 // GitHub API Configuration
 const GITHUB_API_URL = 'https://api.github.com';
 const GITHUB_USERNAME = window.GITHUB_USERNAME || 'username'; // Read from environment or use placeholder
-const USE_PUBLIC_API = false; // Set to false to use GitHub token for higher rate limits
 
 // DOM Elements
 const searchInput = document.getElementById('searchInput');
@@ -90,13 +89,12 @@ function createRepoCard(repo) {
             <p class="repo-description">${escapeHtml(repo.description || 'No description provided')}</p>
             <div class="repo-footer">
                 <div class="repo-info">
-                    <div class="language-badges">
-                        ${getLanguageBadges(repo.languages)}
-                    </div>
                     <span class="repo-updated">
                         Updated ${formatDate(repo.updated_at)}
                     </span>
                 </div>
+                ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" class="repo-homepage" target="_blank" rel="noopener noreferrer">Homepage</a>` : ''}
+                ${repo.hasReadme ? `<button class="repo-readme" onclick="openReadmeModal('${escapeHtml(repo.name)}')">README</button>` : ''}
                 <a href="${escapeHtml(repo.html_url)}" class="repo-link" target="_blank" rel="noopener noreferrer">
                     View on GitHub
                 </a>
@@ -190,3 +188,52 @@ function debounce(func, wait) {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
+
+// Modal for README display
+function openReadmeModal(repoName) {
+    const modal = document.createElement('div');
+    modal.className = 'readme-modal';
+    modal.innerHTML = `
+        <div class="readme-modal-content">
+            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2>${escapeHtml(repoName)}</h2>
+            <div class="readme-content" id="readme-content"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    fetchReadme(repoName);
+}
+
+function fetchReadme(repoName) {
+    fetch(`/.netlify/functions/get-readme?repo=${encodeURIComponent(repoName)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const readmeContent = document.getElementById('readme-content');
+            if (data.content) {
+                readmeContent.innerHTML = marked.parse(atob(data.content));
+            } else {
+                readmeContent.innerHTML = '<p>No README found for this repository.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching README:', error);
+            document.getElementById('readme-content').innerHTML = '<p>Failed to load README.</p>';
+        });
+}
+
+function closeModal() {
+    const modal = document.querySelector('.readme-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Add marked library for markdown parsing
+const script = document.createElement('script');
+script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+document.head.appendChild(script);
