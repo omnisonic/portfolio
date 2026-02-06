@@ -1,7 +1,7 @@
 // GitHub API Configuration
 const GITHUB_API_URL = 'https://api.github.com';
-const GITHUB_USERNAME = 'username'; // Replace with your GitHub username
-const USE_PUBLIC_API = true; // Set to true to use public API (60 requests/hour)
+const GITHUB_USERNAME = window.GITHUB_USERNAME || 'username'; // Read from environment or use placeholder
+const USE_PUBLIC_API = false; // Set to false to use GitHub token for higher rate limits
 
 // DOM Elements
 const searchInput = document.getElementById('searchInput');
@@ -24,52 +24,26 @@ async function init() {
 
 // Fetch repositories from GitHub API
 async function fetchRepositories() {
+    console.log('Starting fetchRepositories...');
     showLoading();
 
     try {
-        const headers = {};
-        const usePublicApi = true; // Set to false if you have a GitHub token
+        const response = await fetch('/.netlify/functions/get-repos');
+        console.log('Response received:', response);
 
-        if (!usePublicApi) {
-            const token = window.GITHUB_TOKEN; // Read from window object
-            if (token) {
-                headers['Authorization'] = `token ${token}`;
-            }
-        }
-
-        const response = await fetch(`${GITHUB_API_URL}/users/${GITHUB_USERNAME}/repos`, { headers });
-        
         if (!response.ok) {
+            console.error('HTTP error! status:', response.status, 'statusText:', response.statusText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         repositories = await response.json();
-        // Sort repositories by date created (most recent first)
-        repositories.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-        // Fetch languages for each repository
-        for (const repo of repositories) {
-            try {
-                const headers = {};
-                if (!usePublicApi) {
-                    const token = window.GITHUB_TOKEN; // Read from window object
-                    if (token) {
-                        headers['Authorization'] = `token ${token}`;
-                    }
-                }
-                const langResponse = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_USERNAME}/${repo.name}/languages`, { headers });
-                if (langResponse.ok) {
-                    repo.languages = await langResponse.json();
-                }
-            } catch (langError) {
-                console.error(`Error fetching languages for ${repo.name}:`, langError);
-                repo.languages = {};
-            }
-        }
+        console.log('Repositories fetched:', repositories.length, 'repositories');
 
         filteredRepositories = [...repositories];
+        console.log('Repositories ready for rendering:', filteredRepositories.length);
         renderRepositories();
     } catch (error) {
+        console.error('Error fetching repositories:', error);
         showError('Failed to fetch repositories. Please check your connection or try again later.');
         console.error('Error fetching repositories:', error);
     }

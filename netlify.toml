@@ -4,6 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "22.17.0"
+  REACT_APP_GITHUB_USERNAME = "omnisonic"
+
 
 [[redirects]]
   from = "/*"
