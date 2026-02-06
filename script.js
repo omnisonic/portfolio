@@ -94,7 +94,7 @@ function createRepoCard(repo) {
                     </span>
                 </div>
                 ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" class="repo-homepage" target="_blank" rel="noopener noreferrer">Homepage</a>` : ''}
-                ${repo.hasReadme ? `<button class="repo-readme" onclick="openReadmeModal('${escapeHtml(repo.name)}')">README</button>` : ''}
+                ${repo.hasReadme ? `<button class="repo-readme" onclick="console.log('README button clicked for repo:', '${escapeHtml(repo.name)}'); openReadmeModal('${escapeHtml(repo.name)}')">README</button>` : ''}
                 <a href="${escapeHtml(repo.html_url)}" class="repo-link" target="_blank" rel="noopener noreferrer">
                     View on GitHub
                 </a>
@@ -191,6 +191,7 @@ document.addEventListener('DOMContentLoaded', init);
 
 // Modal for README display
 function openReadmeModal(repoName) {
+    console.log('Modal opened for repo:', repoName);
     const modal = document.createElement('div');
     modal.className = 'readme-modal';
     modal.innerHTML = `
@@ -214,6 +215,7 @@ function fetchReadme(repoName) {
         })
         .then(data => {
             const readmeContent = document.getElementById('readme-content');
+            console.log('README content fetched for repo:', repoName);
             if (data.content) {
                 readmeContent.innerHTML = marked.parse(atob(data.content));
             } else {
