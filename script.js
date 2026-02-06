@@ -202,6 +202,33 @@ function openReadmeModal(repoName) {
         </div>
     `;
     document.body.appendChild(modal);
+    
+    // Log modal and parent container sizes
+    setTimeout(() => {
+        const modalContent = modal.querySelector('.readme-modal-content');
+        const modalRect = modalContent.getBoundingClientRect();
+        const bodyRect = document.body.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        console.log('=== README MODAL SIZES ===');
+        console.log('Modal Content:', {
+            width: modalRect.width,
+            height: modalRect.height,
+            top: modalRect.top,
+            left: modalRect.left
+        });
+        console.log('Body Container:', {
+            width: bodyRect.width,
+            height: bodyRect.height
+        });
+        console.log('Viewport:', {
+            width: viewportWidth,
+            height: viewportHeight
+        });
+        console.log('==========================');
+    }, 100);
+    
     fetchReadme(repoName);
 }
 
@@ -265,6 +292,32 @@ function openHomepageModal(url, repoName) {
         </div>
     `;
     document.body.appendChild(modal);
+
+    // Log modal and parent container sizes
+    setTimeout(() => {
+        const modalContent = modal.querySelector('.homepage-modal-content');
+        const modalRect = modalContent.getBoundingClientRect();
+        const bodyRect = document.body.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        console.log('=== HOMEPAGE MODAL SIZES ===');
+        console.log('Modal Content:', {
+            width: modalRect.width,
+            height: modalRect.height,
+            top: modalRect.top,
+            left: modalRect.left
+        });
+        console.log('Body Container:', {
+            width: bodyRect.width,
+            height: bodyRect.height
+        });
+        console.log('Viewport:', {
+            width: viewportWidth,
+            height: viewportHeight
+        });
+        console.log('============================');
+    }, 100);
 
     const iframe = modal.querySelector('iframe');
     const loading = modal.querySelector('.homepage-loading');
