@@ -1,12 +1,41 @@
+const cache = require('./cache-utils');
+
 exports.handler = async function (event, context) {
   const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
   const GITHUB_API_URL = 'https://api.github.com';
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
+  // Check for cache clear request
+  if (event.queryStringParameters && event.queryStringParameters.clear === 'true') {
+    const cleared = cache.clearCache();
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ 
+        message: 'Cache cleared successfully',
+        clearedEntries: cleared 
+      })
+    };
+  }
 
   if (!GITHUB_USERNAME) {
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'GitHub username not configured' })
+    };
+  }
+
+  // Generate cache key
+  const cacheKey = cache.generateCacheKey('get-repos', { username: GITHUB_USERNAME });
+
+  // Check cache first
+  const cachedData = cache.getFromCache(cacheKey);
+  if (cachedData) {
+    return {
+      statusCode: 200,
+      body: JSON.stringify(cachedData),
+      headers: {
+        'X-Cache': 'HIT'
+      }
     };
   }
 
@@ -71,9 +100,15 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
       }
     }
 
+    // Cache the result
+    cache.setInCache(cacheKey, repositories);
+
     return {
       statusCode: 200,
-      body: JSON.stringify(repositories)
+      body: JSON.stringify(repositories),
+      headers: {
+        'X-Cache': 'MISS'
+      }
     };
   } catch (error) {
     console.error('Error fetching repositories:', error);

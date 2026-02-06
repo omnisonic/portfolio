@@ -93,7 +93,7 @@ function createRepoCard(repo) {
                         Updated ${formatDate(repo.updated_at)}
                     </span>
                 </div>
-                ${repo.homepage ? `<a href="${escapeHtml(repo.homepage)}" class="repo-homepage" target="_blank" rel="noopener noreferrer">Homepage</a>` : ''}
+                ${repo.homepage ? `<button class="repo-homepage" onclick="openHomepageModal('${escapeHtml(repo.homepage)}', '${escapeHtml(repo.name)}')">Homepage</button>` : ''}
                 ${repo.hasReadme ? `<button class="repo-readme" onclick="console.log('README button clicked for repo:', '${escapeHtml(repo.name)}'); openReadmeModal('${escapeHtml(repo.name)}')">README</button>` : ''}
                 <a href="${escapeHtml(repo.html_url)}" class="repo-link" target="_blank" rel="noopener noreferrer">
                     View on GitHub
@@ -239,3 +239,46 @@ function closeModal() {
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
 document.head.appendChild(script);
+
+// Modal for homepage display
+function openHomepageModal(url, repoName) {
+    console.log('Homepage modal opened for repo:', repoName);
+    const modal = document.createElement('div');
+    modal.className = 'homepage-modal';
+    modal.innerHTML = `
+        <div class="homepage-modal-content">
+            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2>${escapeHtml(repoName)}</h2>
+            <div class="homepage-content">
+                <p class="homepage-url">${escapeHtml(url)}</p>
+                <div class="homepage-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading website...</p>
+                </div>
+                <div class="homepage-preview" style="display: none;">
+                    <iframe src="${escapeHtml(url)}" title="Homepage Preview" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+                </div>
+                <div class="homepage-error" style="display: none;">
+                    <p>Failed to load website. <button onclick="this.parentElement.previousElementSibling.firstElementChild.src='${escapeHtml(url)}'; this.parentElement.previousElementSibling.firstElementChild.contentWindow.location.reload(); this.parentElement.style.display='none'; this.parentElement.previousElementSibling.style.display='block'; this.parentElement.nextElementSibling.style.display='none';">Retry</button></p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    const iframe = modal.querySelector('iframe');
+    const loading = modal.querySelector('.homepage-loading');
+    const preview = modal.querySelector('.homepage-preview');
+    const error = modal.querySelector('.homepage-error');
+
+    iframe.addEventListener('load', () => {
+        loading.style.display = 'none';
+        preview.style.display = 'block';
+    });
+
+    iframe.addEventListener('error', () => {
+        loading.style.display = 'none';
+        preview.style.display = 'none';
+        error.style.display = 'block';
+    });
+}
