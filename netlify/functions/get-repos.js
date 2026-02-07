@@ -1,4 +1,5 @@
 const cache = require('./cache-utils');
+const { addScreenshotUrls } = require('./screenshot-utils');
 
 exports.handler = async function (event, context) {
   const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
@@ -54,7 +55,7 @@ exports.handler = async function (event, context) {
       };
     }
 
-    const repositories = await response.json();
+    let repositories = await response.json();
 
     // Add homepageUrl to each repository
     for (const repo of repositories) {
@@ -99,6 +100,9 @@ exports.handler = async function (event, context) {
         repo.languages = {};
       }
     }
+
+    // Add screenshot URLs using server-side matching
+    repositories = addScreenshotUrls(repositories);
 
     // Cache the result
     cache.setInCache(cacheKey, repositories);

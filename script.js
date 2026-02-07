@@ -100,6 +100,34 @@ async function fetchRepositories() {
 // Set up event listeners for search
 function setupEventListeners() {
     searchInput.addEventListener('input', debounce(handleSearch, 300));
+    
+    // Set up navigation button listeners
+    const homepageBtn = document.querySelector('.homepage-btn');
+    const githubBtn = document.querySelector('.github-btn');
+    const readmeBtn = document.querySelector('.readme-btn');
+    
+    if (homepageBtn) {
+        homepageBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Open portfolio homepage in new tab
+            window.open('https://github.com/omnisonic/portfolio', '_blank');
+        });
+    }
+    
+    if (githubBtn) {
+        githubBtn.addEventListener('click', (e) => {
+            // GitHub link is already an anchor with target="_blank", so we don't prevent default
+            console.log('GitHub button clicked - navigating to GitHub profile');
+        });
+    }
+    
+    if (readmeBtn) {
+        readmeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Fetch and display the README for the portfolio repository
+            fetchPortfolioReadme();
+        });
+    }
 }
 
 // Handle search input
@@ -112,6 +140,9 @@ function handleSearch() {
     renderRepositories();
 }
 
+// Screenshot URL is now provided by the server-side matching
+// No client-side detection needed
+
 // Render repository cards
 function renderRepositories() {
     if (filteredRepositories.length === 0) {
@@ -119,8 +150,11 @@ function renderRepositories() {
         return;
     }
 
-    const repoCards = filteredRepositories.map(repo => createRepoCard(repo)).join('');
-    reposContainer.innerHTML = repoCards;
+    // Create all cards synchronously (no async needed anymore)
+    const repoCards = filteredRepositories.map(repo => createRepoCard(repo));
+    
+    // Join and set HTML
+    reposContainer.innerHTML = repoCards.join('');
 }
 
 // Create a repository card HTML
@@ -130,10 +164,18 @@ function createRepoCard(repo) {
     const hasReadme = repo.hasReadme;
     const githubUrl = escapeHtml(repo.html_url);
     const originalRepoName = repo.name; // Keep original name for API calls
-    const repoDescription = repo.description || ''; // Store description for modal
+    const repoDescription = repo.description || ''; // Store description for preview
+    
+    // Use pre-matched screenshot URL from server
+    const screenshotUrl = repo.screenshotUrl;
     
     return `
-        <div class="repo-card" data-repo-name="${escapeHtml(originalRepoName)}" data-homepage="${homepageUrl}" data-has-readme="${hasReadme}" data-github="${githubUrl}" data-description="${escapeHtml(repoDescription)}">
+        <div class="repo-card" data-repo-name="${escapeHtml(originalRepoName)}" data-homepage="${homepageUrl}" data-has-readme="${hasReadme}" data-github="${githubUrl}" data-description="${escapeHtml(repoDescription)}" data-screenshot="${screenshotUrl || ''}">
+            ${screenshotUrl ? `
+                <div class="repo-screenshot">
+                    <img src="${screenshotUrl}" alt="${escapeHtml(formattedTitle)} screenshot" loading="lazy" onload="this.classList.add('loaded')" onerror="this.parentElement.classList.add('missing'); this.style.display='none';">
+                </div>
+            ` : ''}
             <div class="repo-header">
                 <h2>${escapeHtml(formattedTitle)}</h2>
                 <div class="repo-stats">
@@ -146,13 +188,35 @@ function createRepoCard(repo) {
             <div class="repo-footer">
                 <div class="repo-info">
                     <span class="repo-updated">
-                        Updated ${formatDate(repo.updated_at)}
+                        Created ${formatDate(repo.created_at)}
                     </span>
                 </div>
-                ${repo.homepage ? `<button class="repo-homepage">Homepage</button>` : ''}
-                ${repo.hasReadme ? `<button class="repo-readme">README</button>` : ''}
-                <a href="${githubUrl}" class="repo-link" target="_blank" rel="noopener noreferrer">
-                    View on GitHub
+                ${repo.homepage ? `
+                    <button class="repo-homepage" title="Open in new tab">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                        <span>Open</span>
+                    </button>
+                ` : ''}
+                ${repo.hasReadme ? `
+                    <button class="repo-readme" title="View README">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>README</span>
+                    </button>
+                ` : ''}
+                <a href="${githubUrl}" class="repo-link" target="_blank" rel="noopener noreferrer" title="View on GitHub">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>GitHub</span>
                 </a>
             </div>
         </div>
@@ -246,7 +310,7 @@ function debounce(func, wait) {
 document.addEventListener('DOMContentLoaded', () => {
     init();
     
-    // Set up event delegation for modal buttons
+    // Set up event delegation for repo card buttons
     document.addEventListener('click', (e) => {
         const repoCard = e.target.closest('.repo-card');
         if (!repoCard) return;
@@ -259,9 +323,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get the formatted title for display purposes
         const formattedTitle = repoCard.querySelector('h2').textContent;
         
-        if (e.target.classList.contains('repo-homepage') && homepageUrl) {
-            openHomepageModal(homepageUrl, formattedTitle, repoDescription);
-        } else if (e.target.classList.contains('repo-readme') && hasReadme) {
+        // Homepage button - opens in new tab directly
+        if (e.target.closest('.repo-homepage') && homepageUrl) {
+            console.log('Homepage button clicked - opening in new tab:', homepageUrl);
+            window.open(homepageUrl, '_blank');
+        } 
+        // README button - shows README modal
+        else if (e.target.closest('.repo-readme') && hasReadme) {
             console.log('README button clicked for repo:', originalRepoName);
             openReadmeModal(originalRepoName, repoDescription);
         }
@@ -342,82 +410,48 @@ function closeModal() {
     }
 }
 
+// Fetch and display the portfolio README
+function fetchPortfolioReadme() {
+    console.log('Fetching portfolio README...');
+    const modal = document.createElement('div');
+    modal.className = 'readme-modal';
+    
+    modal.innerHTML = `
+        <div class="readme-modal-content">
+            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2>Portfolio README</h2>
+            <div class="readme-content" id="readme-content">Loading README...</div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Fetch the README from the portfolio repository
+    fetch(`/.netlify/functions/get-readme?repo=portfolio`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const readmeContent = document.getElementById('readme-content');
+            console.log('Portfolio README fetched successfully');
+            if (data.content) {
+                readmeContent.innerHTML = marked.parse(atob(data.content));
+            } else {
+                readmeContent.innerHTML = '<p>No README found for the portfolio repository.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching portfolio README:', error);
+            const readmeContent = document.getElementById('readme-content');
+            if (readmeContent) {
+                readmeContent.innerHTML = '<p>Failed to load README. The portfolio repository may not have a README file.</p>';
+            }
+        });
+}
+
 // Add marked library for markdown parsing
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
 document.head.appendChild(script);
-
-// Modal for homepage display
-function openHomepageModal(url, repoName, repoDescription) {
-    console.log('Homepage modal opened for repo:', repoName);
-    const modal = document.createElement('div');
-    modal.className = 'homepage-modal';
-    
-    // Build description HTML if description exists
-    const descriptionHtml = repoDescription ? 
-        `<div class="repo-description-modal">${escapeHtml(repoDescription)}</div>` : '';
-    
-    modal.innerHTML = `
-        <div class="homepage-modal-content">
-            <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            <h2>${escapeHtml(repoName)}</h2>
-            ${descriptionHtml}
-            <div class="homepage-content">
-                <p class="homepage-url">${escapeHtml(url)}</p>
-                <div class="homepage-loading">
-                    <div class="loading-spinner"></div>
-                    <p>Loading website...</p>
-                </div>
-                <div class="homepage-preview" style="display: none;">
-                    <iframe src="${escapeHtml(url)}" title="Homepage Preview" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-                </div>
-                <div class="homepage-error" style="display: none;">
-                    <p>Failed to load website. <button onclick="this.parentElement.previousElementSibling.firstElementChild.src='${escapeHtml(url)}'; this.parentElement.previousElementSibling.firstElementChild.contentWindow.location.reload(); this.parentElement.style.display='none'; this.parentElement.previousElementSibling.style.display='block'; this.parentElement.nextElementSibling.style.display='none';">Retry</button></p>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    // Log modal and parent container sizes
-    setTimeout(() => {
-        const modalContent = modal.querySelector('.homepage-modal-content');
-        const modalRect = modalContent.getBoundingClientRect();
-        const bodyRect = document.body.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        console.log('=== HOMEPAGE MODAL SIZES ===');
-        console.log('Modal Content:', {
-            width: modalRect.width,
-            height: modalRect.height,
-            top: modalRect.top,
-            left: modalRect.left
-        });
-        console.log('Body Container:', {
-            width: bodyRect.width,
-            height: bodyRect.height
-        });
-        console.log('Viewport:', {
-            width: viewportWidth,
-            height: viewportHeight
-        });
-        console.log('============================');
-    }, 100);
-
-    const iframe = modal.querySelector('iframe');
-    const loading = modal.querySelector('.homepage-loading');
-    const preview = modal.querySelector('.homepage-preview');
-    const error = modal.querySelector('.homepage-error');
-
-    iframe.addEventListener('load', () => {
-        loading.style.display = 'none';
-        preview.style.display = 'block';
-    });
-
-    iframe.addEventListener('error', () => {
-        loading.style.display = 'none';
-        preview.style.display = 'none';
-        error.style.display = 'block';
-    });
-}

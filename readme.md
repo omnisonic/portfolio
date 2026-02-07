@@ -111,8 +111,10 @@ portfolio-site/
 - **Language Detection**: Shows programming languages used in each repository
 - **Star Count Display**: Shows repository popularity with star counts
 - **Live Updates**: Data is fetched in real-time from GitHub API
+- **Repository Screenshots**: Automatic screenshot matching with flexible naming patterns
 - **SEO Optimized**: Semantic HTML and meta tags for better search engine visibility
 - **Fast Loading**: Optimized assets and lazy loading for better performance
+- **Build-time Processing**: Screenshot matching happens at deployment, not runtime
 
 ## API Reference
 
@@ -138,6 +140,26 @@ portfolio-site/
 
 2. **View your portfolio:**
    The site will automatically fetch and display your GitHub repositories using public API (60 requests/hour)
+
+### Repository Screenshots
+
+This portfolio supports automatic screenshot matching for repository previews:
+
+1. **Add screenshots** to `assets/screenshots/` folder
+2. **Flexible naming** - supports various patterns:
+   - `repo-name.png`
+   - `Screenshot repo-name preview.JPG`
+   - `repo-name-screenshot.png`
+3. **Build-time matching** - screenshots are matched during deployment
+4. **No client-side processing** - all matching happens server-side
+
+**Example:**
+For repository "chords-scale-chart", add:
+- `Screenshot chords scale chart preview.JPG` ✓
+- `chords-scale-chart.png`
+- `chords-scale-chart-preview.png`
+
+See `assets/screenshots/README.md` for detailed naming patterns.
 
 ### Netlify Development
 
