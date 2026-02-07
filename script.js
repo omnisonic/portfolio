@@ -80,8 +80,13 @@ function renderRepositories() {
 // Create a repository card HTML
 function createRepoCard(repo) {
     const formattedTitle = formatRepoTitle(repo.name);
+    const homepageUrl = repo.homepage ? escapeHtml(repo.homepage) : '';
+    const hasReadme = repo.hasReadme;
+    const githubUrl = escapeHtml(repo.html_url);
+    const originalRepoName = repo.name; // Keep original name for API calls
+    
     return `
-        <div class="repo-card">
+        <div class="repo-card" data-repo-name="${escapeHtml(originalRepoName)}" data-homepage="${homepageUrl}" data-has-readme="${hasReadme}" data-github="${githubUrl}">
             <div class="repo-header">
                 <h2>${escapeHtml(formattedTitle)}</h2>
                 <div class="repo-stats">
@@ -97,9 +102,9 @@ function createRepoCard(repo) {
                         Updated ${formatDate(repo.updated_at)}
                     </span>
                 </div>
-                ${repo.homepage ? `<button class="repo-homepage" onclick="openHomepageModal('${escapeHtml(repo.homepage)}', '${escapeHtml(formattedTitle)}')">Homepage</button>` : ''}
-                ${repo.hasReadme ? `<button class="repo-readme" onclick="console.log('README button clicked for repo:', '${escapeHtml(formattedTitle)}'); openReadmeModal('${escapeHtml(formattedTitle)}')">README</button>` : ''}
-                <a href="${escapeHtml(repo.html_url)}" class="repo-link" target="_blank" rel="noopener noreferrer">
+                ${repo.homepage ? `<button class="repo-homepage">Homepage</button>` : ''}
+                ${repo.hasReadme ? `<button class="repo-readme">README</button>` : ''}
+                <a href="${githubUrl}" class="repo-link" target="_blank" rel="noopener noreferrer">
                     View on GitHub
                 </a>
             </div>
@@ -191,7 +196,29 @@ function debounce(func, wait) {
 }
 
 // Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    
+    // Set up event delegation for modal buttons
+    document.addEventListener('click', (e) => {
+        const repoCard = e.target.closest('.repo-card');
+        if (!repoCard) return;
+        
+        const originalRepoName = repoCard.dataset.repoName;
+        const homepageUrl = repoCard.dataset.homepage;
+        const hasReadme = repoCard.dataset.hasReadme === 'true';
+        
+        // Get the formatted title for display purposes
+        const formattedTitle = repoCard.querySelector('h2').textContent;
+        
+        if (e.target.classList.contains('repo-homepage') && homepageUrl) {
+            openHomepageModal(homepageUrl, formattedTitle);
+        } else if (e.target.classList.contains('repo-readme') && hasReadme) {
+            console.log('README button clicked for repo:', originalRepoName);
+            openReadmeModal(originalRepoName);
+        }
+    });
+});
 
 // Modal for README display
 function openReadmeModal(repoName) {
