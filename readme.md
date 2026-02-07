@@ -2,6 +2,9 @@
 
 A modern portfolio website that dynamically displays GitHub repositories and projects using the GitHub API. This site showcases my development work and provides an interactive way to explore my projects.
 
+![Portfolio Screenshot](assets/screenshots/Screenshot%20Portfolio.JPG)
+
+
 ## Table of Contents
 - [About the Project](#about-the-project)
 - [Getting Started](#getting-started)
@@ -19,6 +22,7 @@ A modern portfolio website that dynamically displays GitHub repositories and pro
 ## About the Project
 
 This portfolio website is designed to showcase my development projects and GitHub repositories in a clean, modern interface. The site dynamically fetches data from the GitHub API to display up-to-date information about my repositories, including names, descriptions, programming languages, and star counts.
+
 
 The website is built with modern web technologies and follows responsive design principles to ensure optimal viewing experience across all devices, from desktop computers to mobile phones.
 
