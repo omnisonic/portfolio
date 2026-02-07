@@ -84,9 +84,10 @@ function createRepoCard(repo) {
     const hasReadme = repo.hasReadme;
     const githubUrl = escapeHtml(repo.html_url);
     const originalRepoName = repo.name; // Keep original name for API calls
+    const repoDescription = repo.description || ''; // Store description for modal
     
     return `
-        <div class="repo-card" data-repo-name="${escapeHtml(originalRepoName)}" data-homepage="${homepageUrl}" data-has-readme="${hasReadme}" data-github="${githubUrl}">
+        <div class="repo-card" data-repo-name="${escapeHtml(originalRepoName)}" data-homepage="${homepageUrl}" data-has-readme="${hasReadme}" data-github="${githubUrl}" data-description="${escapeHtml(repoDescription)}">
             <div class="repo-header">
                 <h2>${escapeHtml(formattedTitle)}</h2>
                 <div class="repo-stats">
@@ -207,24 +208,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalRepoName = repoCard.dataset.repoName;
         const homepageUrl = repoCard.dataset.homepage;
         const hasReadme = repoCard.dataset.hasReadme === 'true';
+        const repoDescription = repoCard.dataset.description;
         
         // Get the formatted title for display purposes
         const formattedTitle = repoCard.querySelector('h2').textContent;
         
         if (e.target.classList.contains('repo-homepage') && homepageUrl) {
-            openHomepageModal(homepageUrl, formattedTitle);
+            openHomepageModal(homepageUrl, formattedTitle, repoDescription);
         } else if (e.target.classList.contains('repo-readme') && hasReadme) {
             console.log('README button clicked for repo:', originalRepoName);
-            openReadmeModal(originalRepoName);
+            openReadmeModal(originalRepoName, repoDescription);
         }
     });
 });
 
 // Modal for README display
-function openReadmeModal(repoName) {
+function openReadmeModal(repoName, repoDescription) {
     console.log('Modal opened for repo:', repoName);
     const modal = document.createElement('div');
     modal.className = 'readme-modal';
+    
     modal.innerHTML = `
         <div class="readme-modal-content">
             <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
@@ -299,14 +302,20 @@ script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
 document.head.appendChild(script);
 
 // Modal for homepage display
-function openHomepageModal(url, repoName) {
+function openHomepageModal(url, repoName, repoDescription) {
     console.log('Homepage modal opened for repo:', repoName);
     const modal = document.createElement('div');
     modal.className = 'homepage-modal';
+    
+    // Build description HTML if description exists
+    const descriptionHtml = repoDescription ? 
+        `<div class="repo-description-modal">${escapeHtml(repoDescription)}</div>` : '';
+    
     modal.innerHTML = `
         <div class="homepage-modal-content">
             <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
             <h2>${escapeHtml(repoName)}</h2>
+            ${descriptionHtml}
             <div class="homepage-content">
                 <p class="homepage-url">${escapeHtml(url)}</p>
                 <div class="homepage-loading">
