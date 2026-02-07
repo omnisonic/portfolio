@@ -13,14 +13,60 @@ const reposContainer = document.getElementById('repos-container');
 // State
 let repositories = [];
 let filteredRepositories = [];
+let userProfile = null;
 
 // Initialize the application
 async function init() {
     try {
-        await fetchRepositories();
+        // Fetch both profile and repositories in parallel
+        await Promise.all([
+            fetchUserProfile(),
+            fetchRepositories()
+        ]);
         setupEventListeners();
     } catch (error) {
         showError('Failed to initialize application. Please try again later.');
+    }
+}
+
+// Fetch user profile from GitHub API
+async function fetchUserProfile() {
+    console.log('Fetching user profile...');
+    const profileLoading = document.getElementById('profile-loading');
+    const profileImage = document.getElementById('profile-image');
+    
+    try {
+        const response = await fetch(`${GITHUB_API_URL}/users/${GITHUB_USERNAME}`);
+        console.log('Profile response received:', response);
+
+        if (!response.ok) {
+            console.error('HTTP error! status:', response.status, 'statusText:', response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        userProfile = await response.json();
+        console.log('User profile fetched:', userProfile);
+        
+        // Hide loading and show profile image
+        if (profileLoading) profileLoading.style.display = 'none';
+        if (profileImage && userProfile.avatar_url) {
+            profileImage.src = userProfile.avatar_url;
+            profileImage.style.display = 'block';
+            profileImage.style.opacity = '0';
+            
+            // Fade in the image once it loads
+            profileImage.onload = () => {
+                profileImage.style.transition = 'opacity 0.5s ease-in';
+                profileImage.style.opacity = '1';
+            };
+        }
+        
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        if (profileLoading) {
+            profileLoading.textContent = 'Profile unavailable';
+            profileLoading.style.color = '#e74c3c';
+        }
     }
 }
 
