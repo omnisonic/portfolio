@@ -1,14 +1,34 @@
 const cache = require('./cache-utils');
-const { addScreenshotUrls } = require('./screenshot-utils');
+
+// Use node-fetch for Netlify compatibility
+let fetch;
+try {
+  fetch = global.fetch || require('node-fetch');
+} catch (e) {
+  fetch = require('node-fetch');
+}
 
 exports.handler = async function (event, context) {
+  console.log('=== GET-REPOS FUNCTION START ===');
+  console.log('Event:', JSON.stringify(event, null, 2));
+  console.log('Context:', JSON.stringify(context, null, 2));
+  
   const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
   const GITHUB_API_URL = 'https://api.github.com';
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  
+  console.log('Environment variables:', {
+    GITHUB_USERNAME: GITHUB_USERNAME || 'NOT_SET',
+    GITHUB_TOKEN: GITHUB_TOKEN ? 'SET' : 'NOT_SET',
+    NODE_ENV: process.env.NODE_ENV || 'not set',
+    available_fetch: typeof fetch !== 'undefined'
+  });
 
   // Check for cache clear request
   if (event.queryStringParameters && event.queryStringParameters.clear === 'true') {
+    console.log('Cache clear requested');
     const cleared = cache.clearCache();
+    console.log('Cache cleared:', cleared);
     return {
       statusCode: 200,
       body: JSON.stringify({ 
@@ -19,6 +39,7 @@ exports.handler = async function (event, context) {
   }
 
   if (!GITHUB_USERNAME) {
+    console.error('GitHub username not configured');
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'GitHub username not configured' })
@@ -169,8 +190,8 @@ exports.handler = async function (event, context) {
     console.log(`Processing ${repositories.length} repositories for README and languages...`);
     repositories = await processRepos(repositories);
 
-    // Add screenshot URLs using server-side matching
-    repositories = addScreenshotUrls(repositories);
+    // Add screenshot URLs from README images
+    repositories = await addScreenshotUrlsFromReadme(repositories, GITHUB_USERNAME, GITHUB_TOKEN);
 
     // Cache the result
     cache.setInCache(cacheKey, repositories);
@@ -186,9 +207,104 @@ exports.handler = async function (event, context) {
     };
   } catch (error) {
     console.error('Error fetching repositories:', error);
+    console.error('Error stack:', error.stack);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to fetch repositories' })
+      body: JSON.stringify({ 
+        error: 'Failed to fetch repositories',
+        details: error.message 
+      })
     };
   }
+};
+
+/**
+ * Add screenshot URLs from README images
+ */
+async function addScreenshotUrlsFromReadme(repositories, username, token) {
+  const results = [];
+  const batchSize = 5; // Process 5 repos at a time
+  
+  for (let i = 0; i < repositories.length; i += batchSize) {
+    const batch = repositories.slice(i, i + batchSize);
+    
+    const batchPromises = batch.map(async (repo) => {
+      try {
+        // Only process repos that have READMEs
+        if (!repo.hasReadme) {
+          return { ...repo, screenshotUrl: null };
+        }
+        
+        // Fetch README content
+        const readmeResponse = await fetch(
+          `https://api.github.com/repos/${username}/${repo.name}/readme`,
+          {
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              ...(token ? { 'Authorization': `token ${token}` } : {})
+            }
+          }
+        );
+        
+        if (!readmeResponse.ok) {
+          return { ...repo, screenshotUrl: null };
+        }
+        
+        const readmeData = await readmeResponse.json();
+        
+        // Decode base64 content
+        let readmeContent;
+        if (readmeData.encoding === 'base64') {
+          readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
+        } else {
+          readmeContent = readmeData.content;
+        }
+        
+        // Try to extract first image from markdown
+        const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
+        const markdownMatch = readmeContent.match(markdownImageRegex);
+        
+        if (markdownMatch && markdownMatch[1]) {
+          let imageUrl = markdownMatch[1];
+          
+          // Handle relative URLs in markdown
+          if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/')) {
+            // Convert to GitHub raw URL
+            const cleanPath = imageUrl.replace(/^\.\//, '');
+            imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+          }
+          
+          // Skip data URLs
+          if (imageUrl.startsWith('data:')) {
+            return { ...repo, screenshotUrl: null };
+          }
+          
+          return { ...repo, screenshotUrl: imageUrl };
+        }
+        
+        // If no markdown image found, try to get rendered HTML
+        // This is more expensive, so we'll skip it for now and rely on markdown
+        return { ...repo, screenshotUrl: null };
+        
+      } catch (error) {
+        console.error(`Error extracting image from ${repo.name} README:`, error.message);
+        return { ...repo, screenshotUrl: null };
+      }
+    });
+    
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+    
+    // Add small delay between batches
+    if (i + batchSize < repositories.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+  
+  return results;
+}
+
+module.exports = {
+  handler: exports.handler,
+  addScreenshotUrlsFromReadme
 };
