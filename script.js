@@ -81,6 +81,16 @@ async function fetchRepositories() {
 
         if (!response.ok) {
             console.error('HTTP error! status:', response.status, 'statusText:', response.statusText);
+            
+            // Try to parse as JSON to get detailed error info
+            try {
+                const errorText = await response.text();
+                const errorJson = JSON.parse(errorText);
+                console.error('Detailed error:', errorJson);
+            } catch (e) {
+                console.error('Could not parse error response as JSON');
+            }
+            
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
