@@ -13,6 +13,50 @@ exports.handler = async function (event, context) {
   console.log('Event:', JSON.stringify(event, null, 2));
   console.log('Context:', JSON.stringify(context, null, 2));
   
+  // DETAILED ENVIRONMENT VARIABLE LOGGING
+  console.log('=== DETAILED ENVIRONMENT VARIABLE ANALYSIS ===');
+  
+  // Check if process.env exists and what it contains
+  console.log('process.env exists:', typeof process.env !== 'undefined');
+  console.log('process.env type:', typeof process.env);
+  console.log('process.env keys count:', Object.keys(process.env || {}).length);
+  
+  // Log all environment variables (be careful with sensitive data)
+  const allEnvVars = Object.keys(process.env || {});
+  console.log('All environment variable names:', allEnvVars);
+  
+  // Check for specific variables we need
+  const githubUsername = process.env.GITHUB_USERNAME;
+  const githubToken = process.env.GITHUB_TOKEN;
+  const nodeEnv = process.env.NODE_ENV;
+  
+  console.log('GITHUB_USERNAME value:', githubUsername || 'NOT_SET');
+  console.log('GITHUB_USERNAME type:', typeof githubUsername);
+  console.log('GITHUB_TOKEN exists:', !!githubToken);
+  console.log('NODE_ENV value:', nodeEnv || 'NOT_SET');
+  
+  // Check for case variations
+  console.log('g_i_t_h_u_b__u_s_e_r_n_a_m_e:', process.env['GITHUB_USERNAME']);
+  console.log('github_username:', process.env['github_username']);
+  console.log('GitHub_USERNAME:', process.env['GitHub_USERNAME']);
+  
+  // Check if variables are in different namespaces
+  console.log('process.env.GITHUB_USERNAME === undefined:', process.env.GITHUB_USERNAME === undefined);
+  console.log('process.env.GITHUB_USERNAME === null:', process.env.GITHUB_USERNAME === null);
+  console.log('process.env.GITHUB_USERNAME === "":', process.env.GITHUB_USERNAME === '');
+  console.log('process.env.GITHUB_USERNAME === "undefined":', process.env.GITHUB_USERNAME === 'undefined');
+  console.log('process.env.GITHUB_USERNAME === "null":', process.env.GITHUB_USERNAME === 'null');
+  
+  // Check for Netlify-specific environment variables
+  const netlifyEnvVars = Object.keys(process.env).filter(key => 
+    key.toLowerCase().includes('netlify') || 
+    key.toLowerCase().includes('github') || 
+    key.toLowerCase().includes('env')
+  );
+  console.log('Netlify/GitHub related env vars:', netlifyEnvVars);
+  
+  console.log('==================================');
+  
   const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
   const GITHUB_API_URL = 'https://api.github.com';
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
