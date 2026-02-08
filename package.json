@@ -4,7 +4,9 @@
   "description": "A modern portfolio website that dynamically displays GitHub repositories and projects using the GitHub API. This site showcases my development work and provides an interactive way to explore my projects.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build-data.js",
+    "dev": "echo \"Run 'npm run build' to generate static data, then open index.html in browser\""
   },
   "keywords": [],
   "author": "",

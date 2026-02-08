@@ -21,12 +21,40 @@ async function init() {
         // Fetch both profile and repositories in parallel
         await Promise.all([
             fetchUserProfile(),
-            fetchRepositories()
+            loadRepositories()
         ]);
         setupEventListeners();
     } catch (error) {
         showError('Failed to initialize application. Please try again later.');
     }
+}
+
+// Load repositories - tries static data first, falls back to dynamic
+async function loadRepositories() {
+    console.log('Loading repositories...');
+    
+    // Try static data first
+    try {
+        const staticResponse = await fetch('/data/repos.json');
+        if (staticResponse.ok) {
+            const staticData = await staticResponse.json();
+            console.log('Static data found:', staticData);
+            
+            // Use repositories from static data
+            repositories = staticData.repositories || [];
+            filteredRepositories = [...repositories];
+            
+            console.log('Loaded', repositories.length, 'repositories from static data');
+            renderRepositories();
+            return;
+        }
+    } catch (error) {
+        console.log('Static data not available, falling back to dynamic fetch:', error);
+    }
+    
+    // Fallback to dynamic fetch
+    console.log('Using dynamic fetch as fallback...');
+    await fetchRepositories();
 }
 
 // Fetch user profile from GitHub API

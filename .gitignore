@@ -102,3 +102,8 @@ jspm_packages/
 # Storybook build outputs
 .out
 .storybook-out
+
+# Generated static files (should be rebuilt on deployment)
+public/data/
+public/images/repos/
+build.log

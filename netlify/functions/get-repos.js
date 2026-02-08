@@ -90,11 +90,22 @@ exports.handler = async function (event, context) {
     };
   }
 
+  // Get exclude topics from environment variable
+  const excludeTopicsEnv = process.env.EXCLUDE_TOPICS || '';
+  const excludeTopics = excludeTopicsEnv.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
+  
+  console.log('Exclude topics configuration:', {
+    envValue: excludeTopicsEnv,
+    parsed: excludeTopics,
+    count: excludeTopics.length
+  });
+
   // Generate cache key - include pagination and filtering parameters
   const cacheKey = cache.generateCacheKey('get-repos', { 
     username: GITHUB_USERNAME,
     includeForks: false,
-    perPage: 100
+    perPage: 100,
+    excludeTopics: excludeTopics.sort() // Sort for consistent cache keys
   });
 
   // Check cache first
@@ -163,6 +174,25 @@ exports.handler = async function (event, context) {
     const originalRepos = repositories.filter(repo => !repo.fork);
     console.log(`Filtered out ${repositories.length - originalRepos.length} forked repositories. ${originalRepos.length} remaining.`);
     repositories = originalRepos;
+
+    // Fetch topics for each repository
+    console.log(`Fetching topics for ${repositories.length} repositories...`);
+    const reposWithTopics = await fetchRepositoryTopics(repositories, GITHUB_USERNAME, GITHUB_TOKEN);
+    repositories = reposWithTopics;
+
+    // Apply exclude topics filtering
+    if (excludeTopics.length > 0) {
+      const beforeFilter = repositories.length;
+      repositories = repositories.filter(repo => {
+        const repoTopics = (repo.topics || []).map(t => t.toLowerCase());
+        const hasExcludedTopic = excludeTopics.some(excluded => repoTopics.includes(excluded));
+        return !hasExcludedTopic;
+      });
+      const afterFilter = repositories.length;
+      console.log(`Applied exclude topics filter: ${beforeFilter - afterFilter} repositories filtered out, ${afterFilter} remaining.`);
+    } else {
+      console.log('No exclude topics configured, skipping topic filtering.');
+    }
 
     // Add homepageUrl to each repository
     for (const repo of repositories) {
@@ -262,6 +292,54 @@ exports.handler = async function (event, context) {
     };
   }
 };
+
+/**
+ * Fetch topics for each repository
+ */
+async function fetchRepositoryTopics(repositories, username, token) {
+  const results = [];
+  const batchSize = 5; // Process 5 repos at a time to avoid rate limiting
+  
+  for (let i = 0; i < repositories.length; i += batchSize) {
+    const batch = repositories.slice(i, i + batchSize);
+    
+    const batchPromises = batch.map(async (repo) => {
+      try {
+        const topicsResponse = await fetch(
+          `https://api.github.com/repos/${username}/${repo.name}/topics`,
+          {
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              ...(token ? { 'Authorization': `token ${token}` } : {})
+            }
+          }
+        );
+        
+        if (topicsResponse.ok) {
+          const topicsData = await topicsResponse.json();
+          repo.topics = topicsData.names || [];
+        } else {
+          repo.topics = [];
+        }
+      } catch (error) {
+        console.error(`Error fetching topics for ${repo.name}:`, error.message);
+        repo.topics = [];
+      }
+      
+      return repo;
+    });
+    
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+    
+    // Add small delay between batches
+    if (i + batchSize < repositories.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+  
+  return results;
+}
 
 /**
  * Add screenshot URLs from README images

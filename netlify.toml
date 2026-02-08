@@ -1,5 +1,5 @@
 [build]
-  command = ""
+  command = "node build-data.js"
   publish = "."
 
 [build.environment]
