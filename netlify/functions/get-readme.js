@@ -48,6 +48,31 @@ exports.handler = async function (event, context) {
     };
   }
 
+  // Check if README content is available from get-repos.js
+  const cachedRepos = cache.getFromCache(cache.generateCacheKey('get-repos', { 
+    username: GITHUB_USERNAME,
+    includeForks: false,
+    perPage: 100,
+    excludeTopics: []
+  }));
+
+  if (cachedRepos && cachedRepos.length > 0) {
+    const repoData = cachedRepos.find(r => r.name === repo);
+    if (repoData && repoData.readmeContent) {
+      const result = {
+        content: Buffer.from(repoData.readmeContent).toString('base64'),
+        encoding: 'base64'
+      };
+      return {
+        statusCode: 200,
+        body: JSON.stringify(result),
+        headers: {
+          'X-Cache': 'HIT'
+        }
+      };
+    }
+  }
+
   try {
     const response = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_USERNAME}/${repo}/readme`, {
       headers: {
@@ -65,9 +90,36 @@ exports.handler = async function (event, context) {
 
     const readmeData = await response.json();
 
+    // Decode base64 content
+    let readmeContent;
+    if (readmeData.encoding === 'base64') {
+      readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
+    } else {
+      readmeContent = readmeData.content;
+    }
+
+    // Convert relative image paths to GitHub raw URLs
+    const imageRegex = /!\[.*?\]\((.*?)\)/g;
+    const convertedContent = readmeContent.replace(imageRegex, (match, url) => {
+      // Skip if already an absolute URL or data URL
+      if (url.startsWith('http') || url.startsWith('data:')) {
+        return match;
+      }
+
+      // Handle common relative path patterns
+      let cleanUrl = url;
+      if (cleanUrl.startsWith('./')) {
+        cleanUrl = cleanUrl.replace(/^\.\//, '');
+      }
+
+      // Convert to GitHub raw URL
+      return `![${match.slice(2, match.indexOf(']'))}]` +
+             `(https://raw.githubusercontent.com/${GITHUB_USERNAME}/${repo}/main/${cleanUrl})`;
+    });
+
     const result = {
-      content: readmeData.content,
-      encoding: readmeData.encoding
+      content: Buffer.from(convertedContent).toString('base64'),
+      encoding: 'base64'
     };
 
     // Cache the result

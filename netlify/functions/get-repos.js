@@ -264,8 +264,8 @@ exports.handler = async function (event, context) {
     console.log(`Processing ${repositories.length} repositories for README and languages...`);
     repositories = await processRepos(repositories);
 
-    // Add screenshot URLs from README images
-    repositories = await addScreenshotUrlsFromReadme(repositories, GITHUB_USERNAME, GITHUB_TOKEN);
+    // Add screenshot URLs and full README content from README images
+    repositories = await addScreenshotUrlsAndReadmeContent(repositories, GITHUB_USERNAME, GITHUB_TOKEN);
 
     // Cache the result
     cache.setInCache(cacheKey, repositories);
@@ -391,9 +391,13 @@ async function addScreenshotUrlsFromReadme(repositories, username, token) {
           let imageUrl = markdownMatch[1];
           
           // Handle relative URLs in markdown
-          if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/')) {
+          if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/') ||
+              imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
             // Convert to GitHub raw URL
-            const cleanPath = imageUrl.replace(/^\.\//, '');
+            let cleanPath = imageUrl;
+            if (cleanPath.startsWith('./')) {
+              cleanPath = cleanPath.replace(/^\.\//, '');
+            }
             imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
           }
           
@@ -429,5 +433,97 @@ async function addScreenshotUrlsFromReadme(repositories, username, token) {
 
 module.exports = {
   handler: exports.handler,
-  addScreenshotUrlsFromReadme
+  addScreenshotUrlsFromReadme,
+  addScreenshotUrlsAndReadmeContent
 };
+
+// New function to add both screenshot URLs and full README content
+async function addScreenshotUrlsAndReadmeContent(repositories, username, token) {
+  const results = [];
+  const batchSize = 5; // Process 5 repos at a time
+  
+  for (let i = 0; i < repositories.length; i += batchSize) {
+    const batch = repositories.slice(i, i + batchSize);
+    
+    const batchPromises = batch.map(async (repo) => {
+      try {
+        // Only process repos that have READMEs
+        if (!repo.hasReadme) {
+          return { ...repo, screenshotUrl: null, readmeContent: null };
+        }
+        
+        // Fetch README content
+        const readmeResponse = await fetch(
+          `https://api.github.com/repos/${username}/${repo.name}/readme`,
+          {
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              ...(token ? { 'Authorization': `token ${token}` } : {})
+            }
+          }
+        );
+        
+        if (!readmeResponse.ok) {
+          return { ...repo, screenshotUrl: null, readmeContent: null };
+        }
+        
+        const readmeData = await readmeResponse.json();
+        
+        // Decode base64 content
+        let readmeContent;
+        if (readmeData.encoding === 'base64') {
+          readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
+        } else {
+          readmeContent = readmeData.content;
+        }
+        
+        // Try to extract first image from markdown
+        const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
+        const markdownMatch = readmeContent.match(markdownImageRegex);
+        
+        let screenshotUrl = null;
+        if (markdownMatch && markdownMatch[1]) {
+          let imageUrl = markdownMatch[1];
+          
+          // Handle relative URLs in markdown
+          if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/') ||
+              imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
+            // Convert to GitHub raw URL
+            let cleanPath = imageUrl;
+            if (cleanPath.startsWith('./')) {
+              cleanPath = cleanPath.replace(/^\.\//, '');
+            }
+            imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+          }
+          
+          // Skip data URLs
+          if (imageUrl.startsWith('data:')) {
+            screenshotUrl = null;
+          } else {
+            screenshotUrl = imageUrl;
+          }
+        }
+        
+        return { 
+          ...repo, 
+          screenshotUrl: screenshotUrl,
+          readmeContent: readmeContent 
+        };
+        
+      } catch (error) {
+        console.error(`Error extracting image from ${repo.name} README:`, error.message);
+        return { ...repo, screenshotUrl: null, readmeContent: null };
+      }
+    });
+    
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+    
+    // Add small delay between batches
+    if (i + batchSize < repositories.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+  
+  return results;
+}
