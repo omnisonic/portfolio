@@ -35,7 +35,7 @@ async function loadRepositories() {
     
     // Try static data first
     try {
-        const staticResponse = await fetch('/data/repos.json');
+        const staticResponse = await fetch('public/data/repos.json');
         if (staticResponse.ok) {
             const staticData = await staticResponse.json();
             console.log('Static data found:', staticData);
