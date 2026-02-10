@@ -351,9 +351,10 @@ async function downloadImage(url, filepath) {
 
     const file = fs.createWriteStream(filepath);
     
-    // Handle HTTPS request
-    https.get(url, (response) => {
+    // Handle HTTPS request with proper cleanup
+    const request = https.get(url, (response) => {
       if (response.statusCode !== 200) {
+        request.destroy();
         reject(new Error(`Failed to download image: ${response.statusCode}`));
         return;
       }
@@ -368,6 +369,7 @@ async function downloadImage(url, filepath) {
         });
       });
     }).on('error', (err) => {
+      request.destroy();
       fs.unlink(filepath, () => {}); // Delete temp file
       reject(err);
     });
@@ -390,7 +392,7 @@ async function downloadAllScreenshots(repositories) {
         const filename = `${repo.name}${extension}`;
         const filepath = path.join(CONFIG.IMAGES_DIR, filename);
         
-                // Always download fresh copy (overwrite existing)
+        // Always download fresh copy (overwrite existing)
         await downloadImage(repo.screenshotUrl, filepath);
         return { ...repo, localScreenshotPath: `/images/repos/${filename}` };
       } catch (error) {
@@ -536,7 +538,33 @@ async function build() {
 
 // Run if called directly
 if (require.main === module) {
-  build();
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    log(`Unhandled rejection at: ${promise}`, 'error');
+    log(`Reason: ${reason}`, 'error');
+    process.exit(1);
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    log(`Uncaught exception: ${error.message}`, 'error');
+    log(error.stack, 'error');
+    process.exit(1);
+  });
+
+  build().then(success => {
+    if (success) {
+      log('Build completed successfully', 'info');
+      process.exit(0); // Exit with success code
+    } else {
+      log('Build completed with errors', 'warn');
+      process.exit(1); // Exit with error code
+    }
+  }).catch(error => {
+    log(`Build failed: ${error.message}`, 'error');
+    log(error.stack, 'error');
+    process.exit(1);
+  });
 }
 
 module.exports = { build };

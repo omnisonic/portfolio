@@ -8,6 +8,20 @@ try {
   fetch = require('node-fetch');
 }
 
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise);
+  console.error('Reason:', reason);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  console.error(error.stack);
+  process.exit(1);
+});
+
 exports.handler = async function (event, context) {
   console.log('=== GET-REPOS FUNCTION START ===');
   console.log('Event:', JSON.stringify(event, null, 2));
@@ -128,7 +142,7 @@ exports.handler = async function (event, context) {
 
     console.log(`Starting to fetch repositories for ${GITHUB_USERNAME}...`);
 
-    while (true) {
+while (true) {
       const response = await fetch(
         `${GITHUB_API_URL}/users/${GITHUB_USERNAME}/repos?per_page=${perPage}&page=${page}&sort=created&direction=desc`,
         {
@@ -147,7 +161,7 @@ exports.handler = async function (event, context) {
       }
 
       const pageRepos = await response.json();
-      
+
       if (pageRepos.length === 0) {
         // No more repositories to fetch
         break;
@@ -156,13 +170,23 @@ exports.handler = async function (event, context) {
       repositories = repositories.concat(pageRepos);
       console.log(`Fetched page ${page}, got ${pageRepos.length} repositories. Total: ${repositories.length}`);
 
-      // If we got fewer than perPage, we've reached the end
+      // Check if we've reached the last page
+      // If we got exactly perPage repositories, we might have more pages
+      // But if we got fewer, we've reached the end
       if (pageRepos.length < perPage) {
         break;
       }
 
+      // Also check if we've reached the maximum number of repositories
+      // GitHub API returns up to 1000 repositories for unauthenticated requests
+      // and more for authenticated requests, but let's be safe
+      if (repositories.length >= 1000) {
+        console.warn('Reached maximum repository limit of 1000');
+        break;
+      }
+
       page++;
-      
+
       // Safety limit to prevent infinite loops
       if (page > 50) {
         console.warn('Reached safety limit of 50 pages');
@@ -203,15 +227,15 @@ exports.handler = async function (event, context) {
     // But we'll keep the sort for consistency
     repositories.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    // Check if each repository has a README and fetch languages
+// Check if each repository has a README and fetch languages
     // Use Promise.all with concurrency limit to avoid rate limiting
     const processRepos = async (repos) => {
       const results = [];
       const batchSize = 5; // Process 5 repos at a time
-      
+
       for (let i = 0; i < repos.length; i += batchSize) {
         const batch = repos.slice(i, i + batchSize);
-        
+
         const batchPromises = batch.map(async (repo) => {
           try {
             // Check README
@@ -222,9 +246,24 @@ exports.handler = async function (event, context) {
               }
             });
             repo.hasReadme = readmeResponse.ok;
+
+            // Fetch README content if available
+            if (readmeResponse.ok) {
+              const readmeData = await readmeResponse.json();
+              let readmeContent;
+              if (readmeData.encoding === 'base64') {
+                readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
+              } else {
+                readmeContent = readmeData.content;
+              }
+              repo.readmeContent = readmeContent;
+            } else {
+              repo.readmeContent = null;
+            }
           } catch (readmeError) {
             console.error(`Error checking README for ${repo.name}:`, readmeError.message);
             repo.hasReadme = false;
+            repo.readmeContent = null;
           }
 
           try {
@@ -251,7 +290,7 @@ exports.handler = async function (event, context) {
 
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
-        
+
         // Add small delay between batches to be respectful to the API
         if (i + batchSize < repos.length) {
           await new Promise(resolve => setTimeout(resolve, 100));
@@ -266,7 +305,6 @@ exports.handler = async function (event, context) {
 
     // Add screenshot URLs and full README content from README images
     repositories = await addScreenshotUrlsAndReadmeContent(repositories, GITHUB_USERNAME, GITHUB_TOKEN);
-
     // Cache the result
     cache.setInCache(cacheKey, repositories);
 
@@ -383,36 +421,52 @@ async function addScreenshotUrlsFromReadme(repositories, username, token) {
           readmeContent = readmeData.content;
         }
         
-        // Try to extract first image from markdown
-        const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
-        const markdownMatch = readmeContent.match(markdownImageRegex);
-        
-        if (markdownMatch && markdownMatch[1]) {
-          let imageUrl = markdownMatch[1];
-          
-          // Handle relative URLs in markdown
-          if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/') ||
-              imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
-            // Convert to GitHub raw URL
-            let cleanPath = imageUrl;
-            if (cleanPath.startsWith('./')) {
-              cleanPath = cleanPath.replace(/^\.\//, '');
+// Extract all image URLs from markdown
+        const markdownImageRegex = /!\[.*?\]\((.*?)\)/g;
+        const markdownMatches = readmeContent.matchAll(markdownImageRegex);
+
+        let validScreenshotUrl = null;
+
+        // Check each image URL to find a valid screenshot
+        for (const match of markdownMatches) {
+          if (match && match[1]) {
+            let imageUrl = match[1];
+
+            // Skip data URLs
+            if (imageUrl.startsWith('data:')) {
+              continue;
             }
-            imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+
+            // Handle relative URLs in markdown
+            if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/') ||
+                imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
+              // Convert to GitHub raw URL
+              let cleanPath = imageUrl;
+              if (cleanPath.startsWith('./')) {
+                cleanPath = cleanPath.replace(/^\.\//, '');
+              }
+              imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+            }
+
+            // Validate that this is a valid image URL
+            const validImageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+            const urlLower = imageUrl.toLowerCase();
+            const hasValidExtension = validImageExtensions.some(ext => urlLower.endsWith(ext));
+
+            if (hasValidExtension) {
+              validScreenshotUrl = imageUrl;
+              break; // Use the first valid image URL
+            }
           }
-          
-          // Skip data URLs
-          if (imageUrl.startsWith('data:')) {
-            return { ...repo, screenshotUrl: null };
-          }
-          
-          return { ...repo, screenshotUrl: imageUrl };
         }
-        
-        // If no markdown image found, try to get rendered HTML
+
+        if (validScreenshotUrl) {
+          return { ...repo, screenshotUrl: validScreenshotUrl };
+        }
+
+        // If no valid markdown image found, try to get rendered HTML
         // This is more expensive, so we'll skip it for now and rely on markdown
         return { ...repo, screenshotUrl: null };
-        
       } catch (error) {
         console.error(`Error extracting image from ${repo.name} README:`, error.message);
         return { ...repo, screenshotUrl: null };
