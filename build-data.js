@@ -309,6 +309,9 @@ async function extractScreenshotUrls(repositories) {
           if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/')) {
             const cleanPath = imageUrl.replace(/^\.\//, '');
             imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+          } else if (!imageUrl.startsWith('http')) {
+            // Handle other relative paths (images/, screenshots/, etc.)
+            imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${imageUrl}`;
           }
           
           // Skip data URLs
@@ -387,12 +390,7 @@ async function downloadAllScreenshots(repositories) {
         const filename = `${repo.name}${extension}`;
         const filepath = path.join(CONFIG.IMAGES_DIR, filename);
         
-        // Check if file already exists
-        if (fs.existsSync(filepath)) {
-          log(`Image already exists for ${repo.name}, skipping download`);
-          return { ...repo, localScreenshotPath: `/images/repos/${filename}` };
-        }
-
+                // Always download fresh copy (overwrite existing)
         await downloadImage(repo.screenshotUrl, filepath);
         return { ...repo, localScreenshotPath: `/images/repos/${filename}` };
       } catch (error) {
