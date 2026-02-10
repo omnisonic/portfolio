@@ -90,6 +90,56 @@ async function fetchWithRetry(url, options, retries = 0) {
 }
 
 // GitHub API functions
+async function fetchUserProfile() {
+  log('Fetching user profile...');
+  const GITHUB_API_URL = 'https://api.github.com';
+  const username = CONFIG.GITHUB_USERNAME;
+  
+  const url = `${GITHUB_API_URL}/users/${username}`;
+  const options = {
+    headers: {
+      'Accept': 'application/vnd.github.v3+json',
+      ...(CONFIG.GITHUB_TOKEN ? { 'Authorization': `token ${CONFIG.GITHUB_TOKEN}` } : {})
+    },
+    timeout: CONFIG.TIMEOUT
+  };
+
+  try {
+    const response = await fetchWithRetry(url, options);
+    const userProfile = await response.json();
+    
+    // Extract only the essential profile data needed by the frontend
+    const essentialProfile = {
+      login: userProfile.login,
+      avatar_url: userProfile.avatar_url,
+      html_url: userProfile.html_url,
+      name: userProfile.name || userProfile.login,
+      bio: userProfile.bio || '',
+      public_repos: userProfile.public_repos,
+      followers: userProfile.followers,
+      following: userProfile.following,
+      created_at: userProfile.created_at
+    };
+    
+    log(`User profile fetched: ${essentialProfile.login} (${essentialProfile.name})`);
+    return essentialProfile;
+  } catch (error) {
+    log(`Error fetching user profile: ${error.message}`, 'error');
+    // Return a minimal profile as fallback
+    return {
+      login: username,
+      avatar_url: '',
+      html_url: `https://github.com/${username}`,
+      name: username,
+      bio: '',
+      public_repos: 0,
+      followers: 0,
+      following: 0,
+      created_at: new Date().toISOString()
+    };
+  }
+}
+
 async function fetchAllRepositories() {
   log('Fetching all repositories...');
   const GITHUB_API_URL = 'https://api.github.com';
@@ -261,8 +311,8 @@ async function fetchRepositoryDetails(repositories) {
   return results;
 }
 
-async function extractScreenshotUrls(repositories) {
-  log(`Extracting screenshot URLs from READMEs for ${repositories.length} repositories...`);
+async function extractScreenshotUrlsAndReadmeContent(repositories) {
+  log(`Extracting README content and screenshot URLs for ${repositories.length} repositories...`);
   const username = CONFIG.GITHUB_USERNAME;
   const results = [];
   const batchSize = 5;
@@ -272,7 +322,7 @@ async function extractScreenshotUrls(repositories) {
     
     const batchPromises = batch.map(async (repo) => {
       if (!repo.hasReadme) {
-        return { ...repo, screenshotUrl: null };
+        return { ...repo, screenshotUrl: null, readmeContent: null };
       }
 
       try {
@@ -286,7 +336,7 @@ async function extractScreenshotUrls(repositories) {
         
         const readmeResponse = await fetchWithRetry(readmeUrl, options);
         if (!readmeResponse.ok) {
-          return { ...repo, screenshotUrl: null };
+          return { ...repo, screenshotUrl: null, readmeContent: null };
         }
 
         const readmeData = await readmeResponse.json();
@@ -298,10 +348,11 @@ async function extractScreenshotUrls(repositories) {
           readmeContent = readmeData.content;
         }
 
-        // Extract first markdown image
+        // Extract first markdown image for screenshot
         const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
         const markdownMatch = readmeContent.match(markdownImageRegex);
         
+        let screenshotUrl = null;
         if (markdownMatch && markdownMatch[1]) {
           let imageUrl = markdownMatch[1];
           
@@ -315,17 +366,58 @@ async function extractScreenshotUrls(repositories) {
           }
           
           // Skip data URLs
-          if (imageUrl.startsWith('data:')) {
-            return { ...repo, screenshotUrl: null };
+          if (!imageUrl.startsWith('data:')) {
+            screenshotUrl = imageUrl;
           }
-          
-          return { ...repo, screenshotUrl: imageUrl };
         }
         
-        return { ...repo, screenshotUrl: null };
+        // Process README content to replace relative image URLs with local paths
+        let processedReadmeContent = readmeContent;
+        
+        if (screenshotUrl && screenshotUrl.startsWith('https://raw.githubusercontent.com/')) {
+          // Extract the filename from the GitHub URL
+          const urlParts = screenshotUrl.split('/');
+          const filename = urlParts[urlParts.length - 1];
+          
+          // Create the local path that will be used after download
+          const localPath = `/images/repos/${repo.name}${path.extname(filename)}`;
+          
+          // Replace all occurrences of the relative image URL in README content
+          // Handle various relative URL formats
+          const relativePaths = [
+            `images/${filename}`,
+            `./images/${filename}`,
+            `assets/${filename}`,
+            `./assets/${filename}`,
+            `images/screen%20shot%20${repo.name}.JPG`, // URL encoded version
+            `images/screen%20shot%20${repo.name}.jpg`
+          ];
+          
+          relativePaths.forEach(relativePath => {
+            processedReadmeContent = processedReadmeContent.replace(
+              new RegExp(`\\]\\(${relativePath}\\)`, 'g'),
+              `](${localPath})`
+            );
+          });
+          
+          // Also handle the original markdown image reference
+          if (markdownMatch) {
+            const originalMarkdown = markdownMatch[0];
+            const relativeUrl = markdownMatch[1];
+            const newMarkdown = originalMarkdown.replace(relativeUrl, localPath);
+            processedReadmeContent = processedReadmeContent.replace(originalMarkdown, newMarkdown);
+          }
+        }
+        
+        return { 
+          ...repo, 
+          screenshotUrl: screenshotUrl,
+          readmeContent: processedReadmeContent 
+        };
         
       } catch (error) {
-        return { ...repo, screenshotUrl: null };
+        log(`Error processing README for ${repo.name}: ${error.message}`, 'error');
+        return { ...repo, screenshotUrl: null, readmeContent: null };
       }
     });
 
@@ -389,7 +481,8 @@ async function downloadAllScreenshots(repositories) {
     const batchPromises = batch.map(async (repo) => {
       try {
         const extension = path.extname(repo.screenshotUrl) || '.png';
-        const filename = `${repo.name}${extension}`;
+        const lowercaseExtension = extension.toLowerCase();
+        const filename = `${repo.name}${lowercaseExtension}`;
         const filepath = path.join(CONFIG.IMAGES_DIR, filename);
         
         // Always download fresh copy (overwrite existing)
@@ -433,6 +526,7 @@ function cleanRepositoryData(repositories) {
     languages: repo.languages || {},
     hasReadme: repo.hasReadme || false,
     screenshotUrl: repo.localScreenshotPath || repo.screenshotUrl || null,
+    readmeContent: repo.readmeContent || null,
     // Add computed fields for frontend
     homepageUrl: repo.homepage || ''
   }));
@@ -476,34 +570,38 @@ async function build() {
       log(`Created images directory: ${CONFIG.IMAGES_DIR}`);
     }
 
-    // Step 1: Fetch all repositories
+    // Step 1: Fetch user profile
+    const userProfile = await fetchUserProfile();
+
+    // Step 2: Fetch all repositories
     let repositories = await fetchAllRepositories();
     log(`Total repositories fetched: ${repositories.length}`);
 
-    // Step 2: Fetch topics
+    // Step 3: Fetch topics
     repositories = await fetchRepositoryTopics(repositories);
 
-    // Step 3: Apply topic filtering
+    // Step 4: Apply topic filtering
     repositories = await applyTopicFilter(repositories);
 
-    // Step 4: Fetch detailed information
+    // Step 5: Fetch detailed information
     repositories = await fetchRepositoryDetails(repositories);
 
-    // Step 5: Extract screenshot URLs
-    repositories = await extractScreenshotUrls(repositories);
+    // Step 6: Extract screenshot URLs and README content
+    repositories = await extractScreenshotUrlsAndReadmeContent(repositories);
 
-    // Step 6: Download screenshots
+    // Step 7: Download screenshots
     repositories = await downloadAllScreenshots(repositories);
 
-    // Step 7: Clean and sort data
+    // Step 8: Clean and sort data (updated to include readmeContent)
     repositories = cleanRepositoryData(repositories);
     repositories = sortRepositories(repositories);
 
-    // Step 8: Generate final data file
+    // Step 9: Generate final data file
     const finalData = {
       metadata: {
         generatedAt: new Date().toISOString(),
         username: CONFIG.GITHUB_USERNAME,
+        userProfile: userProfile,
         totalRepos: repositories.length,
         languageStats: getLanguageStats(repositories)
       },

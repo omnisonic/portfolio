@@ -1,4 +1,5 @@
 const cache = require('./cache-utils');
+const path = require('path');
 
 // Use node-fetch for Netlify compatibility
 let fetch;
@@ -380,118 +381,8 @@ async function fetchRepositoryTopics(repositories, username, token) {
 }
 
 /**
- * Add screenshot URLs from README images
+ * Add screenshot URLs and full README content from README images
  */
-async function addScreenshotUrlsFromReadme(repositories, username, token) {
-  const results = [];
-  const batchSize = 5; // Process 5 repos at a time
-  
-  for (let i = 0; i < repositories.length; i += batchSize) {
-    const batch = repositories.slice(i, i + batchSize);
-    
-    const batchPromises = batch.map(async (repo) => {
-      try {
-        // Only process repos that have READMEs
-        if (!repo.hasReadme) {
-          return { ...repo, screenshotUrl: null };
-        }
-        
-        // Fetch README content
-        const readmeResponse = await fetch(
-          `https://api.github.com/repos/${username}/${repo.name}/readme`,
-          {
-            headers: {
-              'Accept': 'application/vnd.github.v3+json',
-              ...(token ? { 'Authorization': `token ${token}` } : {})
-            }
-          }
-        );
-        
-        if (!readmeResponse.ok) {
-          return { ...repo, screenshotUrl: null };
-        }
-        
-        const readmeData = await readmeResponse.json();
-        
-        // Decode base64 content
-        let readmeContent;
-        if (readmeData.encoding === 'base64') {
-          readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
-        } else {
-          readmeContent = readmeData.content;
-        }
-        
-// Extract all image URLs from markdown
-        const markdownImageRegex = /!\[.*?\]\((.*?)\)/g;
-        const markdownMatches = readmeContent.matchAll(markdownImageRegex);
-
-        let validScreenshotUrl = null;
-
-        // Check each image URL to find a valid screenshot
-        for (const match of markdownMatches) {
-          if (match && match[1]) {
-            let imageUrl = match[1];
-
-            // Skip data URLs
-            if (imageUrl.startsWith('data:')) {
-              continue;
-            }
-
-            // Handle relative URLs in markdown
-            if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/') ||
-                imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
-              // Convert to GitHub raw URL
-              let cleanPath = imageUrl;
-              if (cleanPath.startsWith('./')) {
-                cleanPath = cleanPath.replace(/^\.\//, '');
-              }
-              imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
-            }
-
-            // Validate that this is a valid image URL
-            const validImageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
-            const urlLower = imageUrl.toLowerCase();
-            const hasValidExtension = validImageExtensions.some(ext => urlLower.endsWith(ext));
-
-            if (hasValidExtension) {
-              validScreenshotUrl = imageUrl;
-              break; // Use the first valid image URL
-            }
-          }
-        }
-
-        if (validScreenshotUrl) {
-          return { ...repo, screenshotUrl: validScreenshotUrl };
-        }
-
-        // If no valid markdown image found, try to get rendered HTML
-        // This is more expensive, so we'll skip it for now and rely on markdown
-        return { ...repo, screenshotUrl: null };
-      } catch (error) {
-        console.error(`Error extracting image from ${repo.name} README:`, error.message);
-        return { ...repo, screenshotUrl: null };
-      }
-    });
-    
-    const batchResults = await Promise.all(batchPromises);
-    results.push(...batchResults);
-    
-    // Add small delay between batches
-    if (i + batchSize < repositories.length) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
-  
-  return results;
-}
-
-module.exports = {
-  handler: exports.handler,
-  addScreenshotUrlsFromReadme,
-  addScreenshotUrlsAndReadmeContent
-};
-
-// New function to add both screenshot URLs and full README content
 async function addScreenshotUrlsAndReadmeContent(repositories, username, token) {
   const results = [];
   const batchSize = 5; // Process 5 repos at a time
@@ -558,9 +449,30 @@ async function addScreenshotUrlsAndReadmeContent(repositories, username, token) 
           }
         }
         
+        // Map GitHub raw URLs to local paths to match build-data.js behavior
+        // This ensures consistency between static and dynamic data
+        let localScreenshotUrl = null;
+        
+        if (screenshotUrl && screenshotUrl.startsWith('https://raw.githubusercontent.com/')) {
+          // Extract the filename from the GitHub URL
+          const urlParts = screenshotUrl.split('/');
+          const filename = urlParts[urlParts.length - 1];
+          
+          // Check if this matches common screenshot naming patterns
+          // The build-data.js downloads images with repo name as filename
+          const expectedLocalPath = `/images/repos/${repo.name}${path.extname(filename)}`;
+          
+          // For now, use the local path pattern that build-data.js creates
+          // This assumes the image was downloaded during build
+          localScreenshotUrl = expectedLocalPath;
+        } else if (screenshotUrl && !screenshotUrl.startsWith('data:')) {
+          // If it's already a local path or other URL, keep it
+          localScreenshotUrl = screenshotUrl;
+        }
+        
         return { 
           ...repo, 
-          screenshotUrl: screenshotUrl,
+          screenshotUrl: localScreenshotUrl,
           readmeContent: readmeContent 
         };
         
@@ -581,3 +493,8 @@ async function addScreenshotUrlsAndReadmeContent(repositories, username, token) 
   
   return results;
 }
+
+module.exports = {
+  handler: exports.handler,
+  addScreenshotUrlsAndReadmeContent
+};

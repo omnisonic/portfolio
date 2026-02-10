@@ -18,11 +18,12 @@ let userProfile = null;
 // Initialize the application
 async function init() {
     try {
-        // Fetch both profile and repositories in parallel
-        await Promise.all([
-            fetchUserProfile(),
-            loadRepositories()
-        ]);
+        // Load repositories first to get static data
+        await loadRepositories();
+        
+        // Then fetch user profile (will use static data if available)
+        await fetchUserProfile();
+        
         setupEventListeners();
     } catch (error) {
         showError('Failed to initialize application. Please try again later.');
@@ -35,10 +36,13 @@ async function loadRepositories() {
     
     // Try static data first
     try {
-        const staticResponse = await fetch('public/data/repos.json');
+        const staticResponse = await fetch('data/repos.json');
         if (staticResponse.ok) {
             const staticData = await staticResponse.json();
             console.log('Static data found:', staticData);
+            
+            // Store static data globally for other functions to use
+            window.staticData = staticData;
             
             // Use repositories from static data
             repositories = staticData.repositories || [];
@@ -57,23 +61,29 @@ async function loadRepositories() {
     await fetchRepositories();
 }
 
-// Fetch user profile from GitHub API
+// Fetch user profile from static data
 async function fetchUserProfile() {
     console.log('Fetching user profile...');
     const profileLoading = document.getElementById('profile-loading');
     const profileImage = document.getElementById('profile-image');
     
     try {
-        const response = await fetch(`${GITHUB_API_URL}/users/${GITHUB_USERNAME}`);
-        console.log('Profile response received:', response);
+        // Try to get user profile from static data
+        if (window.staticData && window.staticData.metadata && window.staticData.metadata.userProfile) {
+            userProfile = window.staticData.metadata.userProfile;
+            console.log('User profile loaded from static data:', userProfile);
+        } else {
+            // Fallback to API if static data not available
+            console.log('Static user profile not available, falling back to API...');
+            const response = await fetch(`${GITHUB_API_URL}/users/${GITHUB_USERNAME}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-        if (!response.ok) {
-            console.error('HTTP error! status:', response.status, 'statusText:', response.statusText);
-            throw new Error(`HTTP error! status: ${response.status}`);
+            userProfile = await response.json();
+            console.log('User profile fetched from API:', userProfile);
         }
-
-        userProfile = await response.json();
-        console.log('User profile fetched:', userProfile);
         
         // Hide loading and show profile image
         if (profileLoading) profileLoading.style.display = 'none';
@@ -419,26 +429,29 @@ function openReadmeModal(repoName, repoDescription) {
 }
 
 function fetchReadme(repoName) {
-    fetch(`/.netlify/functions/get-readme?repo=${encodeURIComponent(repoName)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const readmeContent = document.getElementById('readme-content');
-            console.log('README content fetched for repo:', repoName);
-            if (data.content) {
-                readmeContent.innerHTML = marked.parse(atob(data.content));
-            } else {
-                readmeContent.innerHTML = '<p>No README found for this repository.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching README:', error);
-            document.getElementById('readme-content').innerHTML = '<p>Failed to load README.</p>';
-        });
+    // Use static README content from repos.json
+    const repo = repositories.find(r => r.name === repoName);
+    const readmeContent = document.getElementById('readme-content');
+    
+    if (!repo) {
+        console.error('Repository not found:', repoName);
+        readmeContent.innerHTML = '<p>Repository not found.</p>';
+        return;
+    }
+    
+    console.log('Using static README content for repo:', repoName);
+    
+    if (repo.readmeContent) {
+        // Check if marked library is available
+        if (typeof marked !== 'undefined') {
+            readmeContent.innerHTML = marked.parse(repo.readmeContent);
+        } else {
+            // Fallback: display raw content or basic HTML
+            readmeContent.innerHTML = `<pre>${escapeHtml(repo.readmeContent)}</pre>`;
+        }
+    } else {
+        readmeContent.innerHTML = '<p>No README found for this repository.</p>';
+    }
 }
 
 function closeModal() {
@@ -463,30 +476,29 @@ function fetchPortfolioReadme() {
     `;
     document.body.appendChild(modal);
     
-    // Fetch the README from the portfolio repository
-    fetch(`/.netlify/functions/get-readme?repo=portfolio`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const readmeContent = document.getElementById('readme-content');
-            console.log('Portfolio README fetched successfully');
-            if (data.content) {
-                readmeContent.innerHTML = marked.parse(atob(data.content));
-            } else {
-                readmeContent.innerHTML = '<p>No README found for the portfolio repository.</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching portfolio README:', error);
-            const readmeContent = document.getElementById('readme-content');
-            if (readmeContent) {
-                readmeContent.innerHTML = '<p>Failed to load README. The portfolio repository may not have a README file.</p>';
-            }
-        });
+    // Find portfolio repository in static data
+    const portfolioRepo = repositories.find(r => r.name === 'portfolio');
+    const readmeContent = document.getElementById('readme-content');
+    
+    if (!portfolioRepo) {
+        console.error('Portfolio repository not found in static data');
+        readmeContent.innerHTML = '<p>Portfolio repository not found.</p>';
+        return;
+    }
+    
+    console.log('Using static README content for portfolio repository');
+    
+    if (portfolioRepo.readmeContent) {
+        // Check if marked library is available
+        if (typeof marked !== 'undefined') {
+            readmeContent.innerHTML = marked.parse(portfolioRepo.readmeContent);
+        } else {
+            // Fallback: display raw content or basic HTML
+            readmeContent.innerHTML = `<pre>${escapeHtml(portfolioRepo.readmeContent)}</pre>`;
+        }
+    } else {
+        readmeContent.innerHTML = '<p>No README found for the portfolio repository.</p>';
+    }
 }
 
 // Add marked library for markdown parsing
