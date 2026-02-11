@@ -394,6 +394,7 @@ async function updateChangedRepos(queryParams, githubClient, excludeTopics, body
   console.log('Updating changed repositories...');
   console.log('Query params:', queryParams);
   console.log('Body:', body);
+  console.log('NOTE: Runtime updates are ephemeral - changes will not persist between deployments');
 
   // Try to get changedRepos from body first (POST request), then from query params
   let changedRepoNames;
@@ -428,9 +429,14 @@ async function updateChangedRepos(queryParams, githubClient, excludeTopics, body
     // Fetch full details for changed repositories
     const updatedRepos = await fetchRepositoryDetails(changedRepoNames, githubClient, excludeTopics);
 
-    // Update static data
+    // Update static data in memory
     const updatedStaticData = staticDataManager.updateStaticData(staticData, updatedRepos);
-    await staticDataManager.saveStaticData(updatedStaticData);
+    
+    // NOTE: Do NOT save to file - Netlify functions run in read-only environment
+    // Runtime updates are ephemeral and will be lost between deployments
+    // Data will be refreshed on next deployment via build-data.js
+    console.log('Skipping file write - running in read-only Netlify environment');
+    console.log('Updated data will be returned but not persisted');
 
     return {
       statusCode: 200,
@@ -438,7 +444,8 @@ async function updateChangedRepos(queryParams, githubClient, excludeTopics, body
         success: true,
         updatedRepos: updatedRepos.length,
         totalRepos: updatedStaticData.repositories.length,
-        timestamp: updatedStaticData.metadata.generatedAt
+        timestamp: updatedStaticData.metadata.generatedAt,
+        note: 'Runtime updates are ephemeral - data will not persist between deployments'
       })
     };
   } catch (error) {
@@ -594,22 +601,17 @@ async function fetchRepositoryDetails(repoNames, githubClient, excludeTopics) {
 
         // Check README
         try {
-          const readmeResponse = await githubClient.fetchRepositoryReadme(repoName);
-          repo.hasReadme = readmeResponse.ok;
+          const readmeData = await githubClient.fetchRepositoryReadme(repoName);
+          repo.hasReadme = true;
 
           // Fetch README content if available
-          if (readmeResponse.ok) {
-            const readmeData = await readmeResponse.json();
-            let readmeContent;
-            if (readmeData.encoding === 'base64') {
-              readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
-            } else {
-              readmeContent = readmeData.content;
-            }
-            repo.readmeContent = readmeContent;
+          let readmeContent;
+          if (readmeData.encoding === 'base64') {
+            readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
           } else {
-            repo.readmeContent = null;
+            readmeContent = readmeData.content;
           }
+          repo.readmeContent = readmeContent;
         } catch (readmeError) {
           console.error(`Error checking README for ${repoName}:`, readmeError.message);
           repo.hasReadme = false;
@@ -619,7 +621,7 @@ async function fetchRepositoryDetails(repoNames, githubClient, excludeTopics) {
         // Fetch languages
         try {
           const langResponse = await githubClient.fetchRepositoryLanguages(repoName);
-          repo.languages = await langResponse.json();
+          repo.languages = langResponse;
         } catch (langError) {
           console.error(`Error fetching languages for ${repoName}:`, langError.message);
           repo.languages = {};
@@ -699,13 +701,9 @@ async function addScreenshotUrlsAndReadmeContent(repositories, githubClient) {
         }
 
         // Fetch README content
-        const readmeResponse = await githubClient.fetchRepositoryReadme(repo.name);
+        const readmeData = await githubClient.fetchRepositoryReadme(repo.name);
 
-        if (!readmeResponse.ok) {
-          return { ...repo, screenshotUrl: null, readmeContent: null };
-        }
-
-        const readmeData = await readmeResponse.json();
+        // readmeData is already parsed by githubClient.request()
 
         // Decode base64 content
         let readmeContent;

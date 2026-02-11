@@ -69,11 +69,19 @@ class StaticDataManager {
       console.log(`Ensured directory exists: ${outputDir}`);
     } catch (error) {
       console.error(`Error creating directory ${outputDir}:`, error.message);
-      throw error;
+      // Don't throw - allow graceful degradation in Netlify functions
+      console.warn('Note: Running in read-only environment (Netlify functions). Skipping file write.');
+      return;
     }
 
-    await fs.writeFile(outputPath, JSON.stringify(data, null, 2));
-    console.log(`Static data saved with ${data.repositories.length} repositories`);
+    try {
+      await fs.writeFile(outputPath, JSON.stringify(data, null, 2));
+      console.log(`Static data saved with ${data.repositories.length} repositories`);
+    } catch (error) {
+      console.error(`Error writing to ${outputPath}:`, error.message);
+      // Don't throw - allow graceful degradation in Netlify functions
+      console.warn('Note: Running in read-only environment (Netlify functions). Skipping file write.');
+    }
   }
 
   /**
