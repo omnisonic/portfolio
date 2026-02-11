@@ -645,10 +645,36 @@ async function fetchRepositoryDetails(repoNames, githubClient, excludeTopics) {
             readmeContent = readmeData.content;
           }
           repo.readmeContent = readmeContent;
+          
+          // Extract screenshot URL from README content
+          const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
+          const markdownMatch = readmeContent.match(markdownImageRegex);
+          
+          if (markdownMatch && markdownMatch[1]) {
+            let imageUrl = markdownMatch[1];
+            
+            // Handle relative URLs - convert to GitHub raw URLs
+            if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/')) {
+              const cleanPath = imageUrl.replace(/^\.\//, '');
+              imageUrl = `https://raw.githubusercontent.com/${githubClient.username}/${repoName}/main/${cleanPath}`;
+            } else if (imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
+              const cleanPath = imageUrl.replace(/^\.\//, '');
+              imageUrl = `https://raw.githubusercontent.com/${githubClient.username}/${repoName}/main/${cleanPath}`;
+            } else if (!imageUrl.startsWith('http')) {
+              // Handle other relative paths
+              imageUrl = `https://raw.githubusercontent.com/${githubClient.username}/${repoName}/main/${imageUrl}`;
+            }
+            
+            // Skip data URLs
+            if (!imageUrl.startsWith('data:')) {
+              repo.screenshotUrl = imageUrl;
+            }
+          }
         } catch (readmeError) {
           console.error(`Error checking README for ${repoName}:`, readmeError.message);
           repo.hasReadme = false;
           repo.readmeContent = null;
+          repo.screenshotUrl = null;
         }
 
         // Fetch languages
