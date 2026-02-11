@@ -64,42 +64,20 @@ process.on('uncaughtException', (error) => {
 
 exports.handler = async function (event, context) {
   console.log('=== GET-REPOS FUNCTION START ===');
-  console.log('Event:', JSON.stringify(event, null, 2));
-  console.log('Context:', JSON.stringify(context, null, 2));
+  // console.log('Event:', JSON.stringify(event, null, 2));
+  // console.log('Context:', JSON.stringify(context, null, 2));
 
-  // DETAILED ENVIRONMENT VARIABLE LOGGING
-  console.log('=== DETAILED ENVIRONMENT VARIABLE ANALYSIS ===');
 
-  // Check if process.env exists and what it contains
-  console.log('process.env exists:', typeof process.env !== 'undefined');
-  console.log('process.env type:', typeof process.env);
-  console.log('process.env keys count:', Object.keys(process.env || {}).length);
 
-  // Log all environment variables (be careful with sensitive data)
-  const allEnvVars = Object.keys(process.env || {});
-  console.log('All environment variable names:', allEnvVars);
+
 
   // Check for specific variables we need
   const githubUsername = process.env.GITHUB_USERNAME;
   const githubToken = process.env.GITHUB_TOKEN;
   const nodeEnv = process.env.NODE_ENV;
 
-  console.log('GITHUB_USERNAME value:', githubUsername || 'NOT_SET');
-  console.log('GITHUB_USERNAME type:', typeof githubUsername);
-  console.log('GITHUB_TOKEN exists:', !!githubToken);
-  console.log('NODE_ENV value:', nodeEnv || 'NOT_SET');
+  
 
-  // Check for case variations
-  console.log('g_i_t_h_u_b__u_s_e_r_n_a_m_e:', process.env['GITHUB_USERNAME']);
-  console.log('github_username:', process.env['github_username']);
-  console.log('GitHub_USERNAME:', process.env['GitHub_USERNAME']);
-
-  // Check if variables are in different namespaces
-  console.log('process.env.GITHUB_USERNAME === undefined:', process.env.GITHUB_USERNAME === undefined);
-  console.log('process.env.GITHUB_USERNAME === null:', process.env.GITHUB_USERNAME === null);
-  console.log('process.env.GITHUB_USERNAME === "":', process.env.GITHUB_USERNAME === '');
-  console.log('process.env.GITHUB_USERNAME === "undefined":', process.env.GITHUB_USERNAME === 'undefined');
-  console.log('process.env.GITHUB_USERNAME === "null":', process.env.GITHUB_USERNAME === 'null');
 
   // Check for Netlify-specific environment variables
   const netlifyEnvVars = Object.keys(process.env).filter(key =>
@@ -111,12 +89,7 @@ exports.handler = async function (event, context) {
 
   console.log('==================================');
 
-  console.log('Environment variables:', {
-    GITHUB_USERNAME: GITHUB_USERNAME || 'NOT_SET',
-    GITHUB_TOKEN: GITHUB_TOKEN ? 'SET' : 'NOT_SET',
-    NODE_ENV: process.env.NODE_ENV || 'not set',
-    available_fetch: typeof fetch !== 'undefined'
-  });
+
 
   // Check for cache clear request
   if (event.queryStringParameters && event.queryStringParameters.clear === 'true') {
@@ -327,22 +300,49 @@ async function checkForUpdates(githubClient, excludeTopics) {
       try {
         const existingRepo = staticData.repositories?.find(r => r.name === repo.name);
         if (existingRepo) {
-          const existingUpdated = new Date(existingRepo.updated_at).getTime();
-          const currentUpdated = new Date(repo.updated_at).getTime();
-          const existingPushed = new Date(existingRepo.pushed_at || existingRepo.updated_at).getTime();
-          const currentPushed = new Date(repo.pushed_at).getTime();
+          // Safe timestamp extraction with proper fallback
+          // Use updated_at as primary, then pushed_at, then current time as fallback
+          const existingUpdated = new Date(existingRepo.updated_at || existingRepo.pushed_at || new Date(0)).getTime();
+          const currentUpdated = new Date(repo.updated_at || repo.pushed_at || new Date(0)).getTime();
+          
+          // Use pushed_at as primary, then updated_at, then current time as fallback
+          const existingPushed = new Date(existingRepo.pushed_at || existingRepo.updated_at || new Date(0)).getTime();
+          const currentPushed = new Date(repo.pushed_at || repo.updated_at || new Date(0)).getTime();
 
-          // Consider repo changed if updated_at or pushed_at has changed
-          if (currentUpdated > existingUpdated || currentPushed > existingPushed) {
+          console.log(`=== REPO COMPARISON: ${repo.name} ===`);
+          console.log('Existing data:');
+          console.log('  updated_at:', existingRepo.updated_at || 'N/A');
+          console.log('  pushed_at:', existingRepo.pushed_at || 'N/A');
+          console.log('Current GitHub data:');
+          console.log('  updated_at:', repo.updated_at || 'N/A');
+          console.log('  pushed_at:', repo.pushed_at || 'N/A');
+          console.log('Timestamps (ms):');
+          console.log('  existingUpdated:', existingUpdated);
+          console.log('  currentUpdated:', currentUpdated);
+          console.log('  existingPushed:', existingPushed);
+          console.log('  currentPushed:', currentPushed);
+
+          // Consider repo changed if either updated_at or pushed_at has changed
+          // This ensures we catch changes regardless of which timestamp was updated
+          const isUpdatedChanged = currentUpdated > existingUpdated;
+          const isPushedChanged = currentPushed > existingPushed;
+          console.log('Comparison results:');
+          console.log('  updated_at changed:', isUpdatedChanged);
+          console.log('  pushed_at changed:', isPushedChanged);
+
+          if (isUpdatedChanged || isPushedChanged) {
+            console.log(`REPO MARKED AS CHANGED: ${repo.name}`);
             changedRepos.push({
               name: repo.name,
               updated_at: repo.updated_at,
               pushed_at: repo.pushed_at
             });
           } else {
+            console.log(`REPO MARKED AS UNCHANGED: ${repo.name}`);
             unchangedRepos.push(repo.name);
           }
         } else {
+          console.log(`NEW REPOSITORY DETECTED: ${repo.name}`);
           // New repository not in static data
           changedRepos.push({
             name: repo.name,

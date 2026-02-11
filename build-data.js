@@ -35,7 +35,7 @@ const CONFIG = {
   OUTPUT_DIR: path.join(__dirname, 'public', 'data'),
   IMAGES_DIR: path.join(__dirname, 'public', 'images', 'repos'),
   EXCLUDE_TOPICS: (process.env.EXCLUDE_TOPICS || '').split(',').map(t => t.trim().toLowerCase()).filter(t => t),
-  MAX_RETRIES: 3,
+  MAX_RETRIES: 0,
   TIMEOUT: 30000
 };
 
@@ -516,7 +516,7 @@ async function downloadAllScreenshots(repositories) {
 }
 
 // Data processing functions
-function cleanRepositoryData(repositories) {
+function cleanRepositoryData(repositories, buildTimestamp) {
   return repositories.map(repo => ({
     id: repo.id,
     name: repo.name,
@@ -525,10 +525,11 @@ function cleanRepositoryData(repositories) {
     homepage: repo.homepage,
     created_at: repo.created_at,
     updated_at: repo.updated_at,
+    pushed_at: repo.pushed_at,
     topics: repo.topics || [],
     languages: repo.languages || {},
     hasReadme: repo.hasReadme || false,
-    screenshotUrl: repo.localScreenshotPath || repo.screenshotUrl || null,
+    screenshotUrl: repo.localScreenshotPath ? `${repo.localScreenshotPath}?v=${buildTimestamp}` : null,
     readmeContent: repo.readmeContent || null,
     // Add computed fields for frontend
     homepageUrl: repo.homepage || ''
@@ -596,7 +597,9 @@ async function build() {
     repositories = await downloadAllScreenshots(repositories);
 
     // Step 8: Clean and sort data (updated to include readmeContent)
-    repositories = cleanRepositoryData(repositories);
+    // Use timestamp for cache busting on image URLs
+    const buildTimestamp = Date.now();
+    repositories = cleanRepositoryData(repositories, buildTimestamp);
     repositories = sortRepositories(repositories);
 
     // Step 9: Generate final data file

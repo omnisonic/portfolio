@@ -25,20 +25,35 @@ class StaticDataManager {
    * Load existing static data from file
    * @returns {object} Static data object
    */
-  async loadStaticData() {
+    async loadStaticData() {
     const dataPath = this.getReposDataPath();
     // __dirname is netlify/functions, so we need to go up 2 levels to reach project root
     const fullPath = path.join(__dirname, '..', '..', dataPath);
 
-    console.log('Loading static data...');
+    console.log('=== LOAD STATIC DATA START ===');
+    console.log('Current time:', new Date().toISOString());
     console.log('__dirname:', __dirname);
     console.log('dataPath:', dataPath);
     console.log('fullPath:', fullPath);
 
     try {
+      // Get file stats to check last modified time
+      const stats = await fs.stat(fullPath);
+      console.log('File stats:');
+      console.log('  Last modified:', stats.mtime.toISOString());
+      console.log('  Created:', stats.birthtime.toISOString());
+      console.log('  Size:', stats.size, 'bytes');
+
       const dataRaw = await fs.readFile(fullPath, 'utf8');
       const data = JSON.parse(dataRaw);
-      console.log(`Loaded existing static data with ${data.repositories?.length || 0} repositories`);
+
+      console.log('=== FILE CONTENT VERIFICATION ===');
+      console.log('Repositories count:', data.repositories?.length || 0);
+      console.log('Generated at:', data.metadata?.generatedAt || 'N/A');
+      console.log('First repo name:', data.repositories?.[0]?.name || 'N/A');
+      console.log('Last repo name:', data.repositories?.[data.repositories.length - 1]?.name || 'N/A');
+      console.log('=== LOAD STATIC DATA END ===');
+
       return data;
     } catch (error) {
       console.log('No existing static data found, will perform full fetch');

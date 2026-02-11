@@ -13,19 +13,20 @@
   conditions = { "Accept" = ["text/html"] }
 
 # Headers for image files to ensure correct MIME types
+# Using shorter cache duration to allow updates after builds
 [[headers]]
   for = "/images/repos/*"
   [headers.values]
     Content-Type = "image/jpeg"
-    Cache-Control = "public, max-age=31536000"
+    Cache-Control = "public, max-age=3600"
 
 [[headers]]
   for = "/images/repos/*.png"
   [headers.values]
     Content-Type = "image/png"
-    Cache-Control = "public, max-age=31536000"
+    Cache-Control = "public, max-age=3600"
 
 [[headers]]
   for = "/screenshots/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000"
+    Cache-Control = "public, max-age=3600"
