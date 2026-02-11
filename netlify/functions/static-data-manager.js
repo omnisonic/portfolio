@@ -55,11 +55,22 @@ class StaticDataManager {
     const dataPath = this.getReposDataPath();
     // __dirname is netlify/functions, so we need to go up 2 levels to reach project root
     const outputPath = path.join(__dirname, '..', '..', dataPath);
+    const outputDir = path.dirname(outputPath);
 
     console.log('Saving static data...');
     console.log('__dirname:', __dirname);
     console.log('dataPath:', dataPath);
     console.log('outputPath:', outputPath);
+    console.log('outputDir:', outputDir);
+
+    // Ensure directory exists before writing file
+    try {
+      await fs.mkdir(outputDir, { recursive: true });
+      console.log(`Ensured directory exists: ${outputDir}`);
+    } catch (error) {
+      console.error(`Error creating directory ${outputDir}:`, error.message);
+      throw error;
+    }
 
     await fs.writeFile(outputPath, JSON.stringify(data, null, 2));
     console.log(`Static data saved with ${data.repositories.length} repositories`);

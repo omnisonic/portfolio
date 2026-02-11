@@ -1,5 +1,5 @@
 [build]
-  command = "node build-data.js"
+  command = "mkdir -p public/data && echo 'Build complete - data will be fetched at runtime'"
   publish = "public"
 
 [build.environment]
