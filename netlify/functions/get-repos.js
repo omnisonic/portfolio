@@ -74,8 +74,9 @@ process.on('uncaughtException', (error) => {
 
 exports.handler = async function (event, context) {
   console.log('=== GET-REPOS FUNCTION START ===');
-  // console.log('Event:', JSON.stringify(event, null, 2));
-  // console.log('Context:', JSON.stringify(context, null, 2));
+  console.log('Data source tracking enabled');
+  console.log('Event:', JSON.stringify(event, null, 2));
+  console.log('Context:', JSON.stringify(context, null, 2));
 
 
 
@@ -110,7 +111,11 @@ exports.handler = async function (event, context) {
       statusCode: 200,
       body: JSON.stringify({
         message: 'Cache cleared successfully',
-        clearedEntries: cleared
+        clearedEntries: cleared,
+        logs: [
+          { timestamp: new Date().toISOString(), message: 'Cache clear requested' },
+          { timestamp: new Date().toISOString(), message: `Cache cleared: ${cleared}` }
+        ]
       })
     };
   }
@@ -118,6 +123,7 @@ exports.handler = async function (event, context) {
   // Check for mode parameter
   const mode = event.queryStringParameters?.mode || 'full';
   console.log('Operation mode:', mode);
+  const logs = [{ timestamp: new Date().toISOString(), message: `Operation mode: ${mode}` }];
 
   if (!GITHUB_USERNAME) {
     console.error('GitHub username not configured');
@@ -138,9 +144,10 @@ exports.handler = async function (event, context) {
   });
 
   try {
+    let result;
     if (mode === 'check') {
       // Lightweight check for updates
-      return await checkForUpdates(githubClient, excludeTopics);
+      result = await checkForUpdates(githubClient, excludeTopics);
     } else if (mode === 'update') {
       // Update changed repositories
       // Parse body if it's a string (Netlify sends it as string)
@@ -153,11 +160,20 @@ exports.handler = async function (event, context) {
           body = null;
         }
       }
-      return await updateChangedRepos(event.queryStringParameters, githubClient, excludeTopics, body);
+      result = await updateChangedRepos(event.queryStringParameters, githubClient, excludeTopics, body);
     } else {
       // Full fetch (default)
-      return await fetchAllRepositories(githubClient, excludeTopics);
+      result = await fetchAllRepositories(githubClient, excludeTopics);
     }
+
+    // Add logs to the result
+    if (result.body) {
+      const body = JSON.parse(result.body);
+      body.logs = logs;
+      result.body = JSON.stringify(body, null, 2);
+    }
+
+    return result;
   } catch (error) {
     console.error('Error in get-repos:', error);
     console.error('Error stack:', error.stack);
@@ -166,7 +182,8 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({
         error: 'Failed to fetch repositories',
         details: error.message,
-        type: error.constructor.name
+        type: error.constructor.name,
+        logs: logs
       })
     };
   }
@@ -280,41 +297,26 @@ async function checkForUpdates(githubClient, excludeTopics) {
       repos.push(...filtered);
     }
 
-    // Load existing static data
-    console.log('Loading existing static data...');
-    let staticData;
-    try {
-      staticData = await staticDataManager.loadStaticData();
-      console.log('Static data loaded successfully from file system');
-      console.log('Static data repositories count:', staticData?.repositories?.length || 0);
-    } catch (loadError) {
-      console.error('Error loading static data from file system:', loadError.message);
-      console.error('Error type:', loadError.constructor.name);
-      console.log('Attempting to use embedded data as fallback...');
-      
-      // Try to use embedded data as fallback
-      if (EMBEDDED_DATA && EMBEDDED_DATA.repositories && EMBEDDED_DATA.repositories.length > 0) {
-        console.log('Using embedded data as fallback');
-        staticData = EMBEDDED_DATA;
-        console.log('Embedded data repositories count:', staticData.repositories.length);
-      } else {
-        console.error('No embedded data available either');
-        staticData = null;
-      }
-    }
+    // Load existing static data - use embedded data as primary source
+    // File system is not accessible in Netlify serverless environment
+    console.log('Loading existing static data from embedded source...');
+    let staticData = EMBEDDED_DATA;
 
-    if (!staticData) {
-      console.log('No existing static data found (file system or embedded)');
+    if (!staticData || !staticData.repositories || staticData.repositories.length === 0) {
+      console.log('No embedded data available');
       console.log('NOTE: Client may still have valid static data loaded');
       console.log('Returning needsFullFetch: true to trigger client-side full fetch');
       return {
         statusCode: 200,
         body: JSON.stringify({ 
           needsFullFetch: true,
-          reason: 'Static data not found on server (file system or embedded)'
+          reason: 'No embedded data available on server'
         })
       };
     }
+
+    console.log('Using embedded static data');
+    console.log('Static data repositories count:', staticData.repositories.length);
 
     // Compare updated_at timestamps to find changed repos
     console.log('Comparing repositories for changes...');
@@ -441,15 +443,21 @@ async function updateChangedRepos(queryParams, githubClient, excludeTopics, body
   console.log(`Updating ${changedRepoNames.length} changed repositories...`);
 
   try {
-    // Load existing static data
-    const staticData = await staticDataManager.loadStaticData();
+    // Load existing static data from embedded source
+    // File system is not accessible in Netlify serverless environment
+    console.log('Loading static data from embedded source for update...');
+    const staticData = EMBEDDED_DATA;
 
-    if (!staticData) {
+    if (!staticData || !staticData.repositories || staticData.repositories.length === 0) {
+      console.error('No embedded data available for update');
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: 'Failed to load existing static data' })
+        body: JSON.stringify({ error: 'No embedded data available for update' })
       };
     }
+
+    console.log('Using embedded static data for update');
+    console.log('Static data repositories count:', staticData.repositories.length);
 
     // Fetch full details for changed repositories
     const updatedRepos = await fetchRepositoryDetails(changedRepoNames, githubClient, excludeTopics);
