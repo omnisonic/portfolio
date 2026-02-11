@@ -477,12 +477,49 @@ function fetchReadme(repoName) {
     console.log('Using static README content for repo:', repoName);
     
     if (repo.readmeContent) {
+        // Process README content to convert relative image URLs to absolute GitHub URLs
+        let processedContent = repo.readmeContent;
+        
+        // Convert relative image paths to GitHub raw URLs
+        // Match markdown images: ![alt](path) or HTML images: <img src="path">
+        const username = window.staticData?.metadata?.username || GITHUB_USERNAME;
+        
+        // Convert markdown image references
+        processedContent = processedContent.replace(
+            /!\[([^\]]*)\]\(([^)]+)\)/g,
+            (match, alt, url) => {
+                // If URL is already absolute (http/https), keep it as is
+                if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+                    return match;
+                }
+                // Convert relative path to GitHub raw URL
+                const cleanUrl = url.replace(/^\.\//, '');
+                const absoluteUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${cleanUrl}`;
+                return `![${alt}](${absoluteUrl})`;
+            }
+        );
+        
+        // Convert HTML img src attributes
+        processedContent = processedContent.replace(
+            /<img([^>]+)src=["']([^"']+)["']([^>]*)>/gi,
+            (match, before, url, after) => {
+                // If URL is already absolute, keep it as is
+                if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+                    return match;
+                }
+                // Convert relative path to GitHub raw URL
+                const cleanUrl = url.replace(/^\.\//, '');
+                const absoluteUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${cleanUrl}`;
+                return `<img${before}src="${absoluteUrl}"${after}>`;
+            }
+        );
+        
         // Check if marked library is available
         if (typeof marked !== 'undefined') {
-            readmeContent.innerHTML = marked.parse(repo.readmeContent);
+            readmeContent.innerHTML = marked.parse(processedContent);
         } else {
             // Fallback: display raw content or basic HTML
-            readmeContent.innerHTML = `<pre>${escapeHtml(repo.readmeContent)}</pre>`;
+            readmeContent.innerHTML = `<pre>${escapeHtml(processedContent)}</pre>`;
         }
     } else {
         readmeContent.innerHTML = '<p>No README found for this repository.</p>';
@@ -533,12 +570,49 @@ function fetchPortfolioReadme() {
     console.log('Using static README content for portfolio repository');
     
     if (portfolioRepo.readmeContent) {
+        // Process README content to convert relative image URLs to absolute GitHub URLs
+        let processedContent = portfolioRepo.readmeContent;
+        
+        // Convert relative image paths to GitHub raw URLs
+        const username = window.staticData?.metadata?.username || GITHUB_USERNAME;
+        const repoName = 'portfolio';
+        
+        // Convert markdown image references
+        processedContent = processedContent.replace(
+            /!\[([^\]]*)\]\(([^)]+)\)/g,
+            (match, alt, url) => {
+                // If URL is already absolute (http/https), keep it as is
+                if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+                    return match;
+                }
+                // Convert relative path to GitHub raw URL
+                const cleanUrl = url.replace(/^\.\//, '');
+                const absoluteUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${cleanUrl}`;
+                return `![${alt}](${absoluteUrl})`;
+            }
+        );
+        
+        // Convert HTML img src attributes
+        processedContent = processedContent.replace(
+            /<img([^>]+)src=["']([^"']+)["']([^>]*)>/gi,
+            (match, before, url, after) => {
+                // If URL is already absolute, keep it as is
+                if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+                    return match;
+                }
+                // Convert relative path to GitHub raw URL
+                const cleanUrl = url.replace(/^\.\//, '');
+                const absoluteUrl = `https://raw.githubusercontent.com/${username}/${repoName}/main/${cleanUrl}`;
+                return `<img${before}src="${absoluteUrl}"${after}>`;
+            }
+        );
+        
         // Check if marked library is available
         if (typeof marked !== 'undefined') {
-            readmeContent.innerHTML = marked.parse(portfolioRepo.readmeContent);
+            readmeContent.innerHTML = marked.parse(processedContent);
         } else {
             // Fallback: display raw content or basic HTML
-            readmeContent.innerHTML = `<pre>${escapeHtml(portfolioRepo.readmeContent)}</pre>`;
+            readmeContent.innerHTML = `<pre>${escapeHtml(processedContent)}</pre>`;
         }
     } else {
         readmeContent.innerHTML = '<p>No README found for the portfolio repository.</p>';
