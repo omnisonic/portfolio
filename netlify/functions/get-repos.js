@@ -478,7 +478,8 @@ async function updateChangedRepos(queryParams, githubClient, excludeTopics, body
         updatedRepos: updatedRepos.length,
         totalRepos: updatedStaticData.repositories.length,
         timestamp: updatedStaticData.metadata.generatedAt,
-        note: 'Runtime updates are ephemeral - data will not persist between deployments'
+        note: 'Runtime updates are ephemeral - data will not persist between deployments',
+        repositories: updatedRepos
       })
     };
   } catch (error) {

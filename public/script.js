@@ -731,6 +731,33 @@ function checkForUpdatesOnReload() {
                     console.log('Repository update result:', updateData);
                     if (updateData.success) {
                         console.log(`Updated ${updateData.updatedRepos} repositories`);
+                        
+                        // Merge updated repositories into the displayed list
+                        if (updateData.repositories && updateData.repositories.length > 0) {
+                            console.log('Merging updated repositories into display...');
+                            
+                            // Create a map of existing repos by name
+                            const repoMap = new Map(repositories.map(r => [r.name, r]));
+                            
+                            // Update or add the new repos
+                            updateData.repositories.forEach(updatedRepo => {
+                                console.log(`Updating repo: ${updatedRepo.name}`);
+                                repoMap.set(updatedRepo.name, updatedRepo);
+                            });
+                            
+                            // Convert map back to array
+                            repositories = Array.from(repoMap.values());
+                            filteredRepositories = [...repositories];
+                            
+                            // Re-render the display
+                            console.log('Re-rendering repositories with updated data...');
+                            renderRepositories();
+                            
+                            // Also update window.staticData if it exists
+                            if (window.staticData && window.staticData.repositories) {
+                                window.staticData.repositories = repositories;
+                            }
+                        }
                     } else {
                         console.error('Failed to update repositories:', updateData);
                     }
