@@ -1,13 +1,52 @@
 const cache = require('./cache-utils');
 const path = require('path');
+const fs = require('fs').promises;
+const GitHubClient = require('./github-client');
+const RepositoryProcessor = require('./repository-processor');
+const StaticDataManager = require('./static-data-manager');
 
-// Use node-fetch for Netlify compatibility
-let fetch;
-try {
-  fetch = global.fetch || require('node-fetch');
-} catch (e) {
-  fetch = require('node-fetch');
+// Fetch cache - will be initialized on first use
+const fetchCache = {};
+
+/**
+ * Get fetch function (handles ESM module loading)
+ */
+async function getFetch() {
+  if (fetchCache.fetch) return fetchCache.fetch;
+  
+  try {
+    // Try to use global fetch first (Node.js 18+)
+    if (typeof global.fetch !== 'undefined') {
+      console.log('Using global fetch (Node.js 18+)');
+      fetchCache.fetch = global.fetch;
+      return fetchCache.fetch;
+    }
+    
+    // Fall back to node-fetch for older Node.js versions
+    console.log('Using node-fetch module');
+    const nodeFetch = await import('node-fetch');
+    fetchCache.fetch = nodeFetch.default;
+    return fetchCache.fetch;
+  } catch (error) {
+    console.error('Failed to initialize fetch:', error.message);
+    throw new Error('Unable to load fetch function. Please ensure node-fetch is installed.');
+  }
 }
+
+// Initialize modules
+const staticDataManager = new StaticDataManager();
+const repositoryProcessor = new RepositoryProcessor();
+
+// Initialize GitHub client
+const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
+// Validate GitHub username is configured
+if (!GITHUB_USERNAME) {
+  console.error('CRITICAL: GITHUB_USERNAME environment variable is not set');
+}
+
+const githubClient = new GitHubClient(GITHUB_USERNAME, GITHUB_TOKEN);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
@@ -27,55 +66,51 @@ exports.handler = async function (event, context) {
   console.log('=== GET-REPOS FUNCTION START ===');
   console.log('Event:', JSON.stringify(event, null, 2));
   console.log('Context:', JSON.stringify(context, null, 2));
-  
+
   // DETAILED ENVIRONMENT VARIABLE LOGGING
   console.log('=== DETAILED ENVIRONMENT VARIABLE ANALYSIS ===');
-  
+
   // Check if process.env exists and what it contains
   console.log('process.env exists:', typeof process.env !== 'undefined');
   console.log('process.env type:', typeof process.env);
   console.log('process.env keys count:', Object.keys(process.env || {}).length);
-  
+
   // Log all environment variables (be careful with sensitive data)
   const allEnvVars = Object.keys(process.env || {});
   console.log('All environment variable names:', allEnvVars);
-  
+
   // Check for specific variables we need
   const githubUsername = process.env.GITHUB_USERNAME;
   const githubToken = process.env.GITHUB_TOKEN;
   const nodeEnv = process.env.NODE_ENV;
-  
+
   console.log('GITHUB_USERNAME value:', githubUsername || 'NOT_SET');
   console.log('GITHUB_USERNAME type:', typeof githubUsername);
   console.log('GITHUB_TOKEN exists:', !!githubToken);
   console.log('NODE_ENV value:', nodeEnv || 'NOT_SET');
-  
+
   // Check for case variations
   console.log('g_i_t_h_u_b__u_s_e_r_n_a_m_e:', process.env['GITHUB_USERNAME']);
   console.log('github_username:', process.env['github_username']);
   console.log('GitHub_USERNAME:', process.env['GitHub_USERNAME']);
-  
+
   // Check if variables are in different namespaces
   console.log('process.env.GITHUB_USERNAME === undefined:', process.env.GITHUB_USERNAME === undefined);
   console.log('process.env.GITHUB_USERNAME === null:', process.env.GITHUB_USERNAME === null);
   console.log('process.env.GITHUB_USERNAME === "":', process.env.GITHUB_USERNAME === '');
   console.log('process.env.GITHUB_USERNAME === "undefined":', process.env.GITHUB_USERNAME === 'undefined');
   console.log('process.env.GITHUB_USERNAME === "null":', process.env.GITHUB_USERNAME === 'null');
-  
+
   // Check for Netlify-specific environment variables
-  const netlifyEnvVars = Object.keys(process.env).filter(key => 
-    key.toLowerCase().includes('netlify') || 
-    key.toLowerCase().includes('github') || 
+  const netlifyEnvVars = Object.keys(process.env).filter(key =>
+    key.toLowerCase().includes('netlify') ||
+    key.toLowerCase().includes('github') ||
     key.toLowerCase().includes('env')
   );
   console.log('Netlify/GitHub related env vars:', netlifyEnvVars);
-  
+
   console.log('==================================');
-  
-  const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
-  const GITHUB_API_URL = 'https://api.github.com';
-  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-  
+
   console.log('Environment variables:', {
     GITHUB_USERNAME: GITHUB_USERNAME || 'NOT_SET',
     GITHUB_TOKEN: GITHUB_TOKEN ? 'SET' : 'NOT_SET',
@@ -90,12 +125,16 @@ exports.handler = async function (event, context) {
     console.log('Cache cleared:', cleared);
     return {
       statusCode: 200,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         message: 'Cache cleared successfully',
-        clearedEntries: cleared 
+        clearedEntries: cleared
       })
     };
   }
+
+  // Check for mode parameter
+  const mode = event.queryStringParameters?.mode || 'full';
+  console.log('Operation mode:', mode);
 
   if (!GITHUB_USERNAME) {
     console.error('GitHub username not configured');
@@ -108,32 +147,314 @@ exports.handler = async function (event, context) {
   // Get exclude topics from environment variable
   const excludeTopicsEnv = process.env.EXCLUDE_TOPICS || '';
   const excludeTopics = excludeTopicsEnv.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
-  
+
   console.log('Exclude topics configuration:', {
     envValue: excludeTopicsEnv,
     parsed: excludeTopics,
     count: excludeTopics.length
   });
 
-  // Generate cache key - include pagination and filtering parameters
-  const cacheKey = cache.generateCacheKey('get-repos', { 
-    username: GITHUB_USERNAME,
-    includeForks: false,
-    perPage: 100,
-    excludeTopics: excludeTopics.sort() // Sort for consistent cache keys
-  });
-
-  // Check cache first
-  const cachedData = cache.getFromCache(cacheKey);
-  if (cachedData) {
-    return {
-      statusCode: 200,
-      body: JSON.stringify(cachedData),
-      headers: {
-        'X-Cache': 'HIT'
+  try {
+    if (mode === 'check') {
+      // Lightweight check for updates
+      return await checkForUpdates(githubClient, excludeTopics);
+    } else if (mode === 'update') {
+      // Update changed repositories
+      // Parse body if it's a string (Netlify sends it as string)
+      let body = event.body;
+      if (typeof body === 'string') {
+        try {
+          body = JSON.parse(body);
+        } catch (e) {
+          console.error('Failed to parse request body:', e.message);
+          body = null;
+        }
       }
+      return await updateChangedRepos(event.queryStringParameters, githubClient, excludeTopics, body);
+    } else {
+      // Full fetch (default)
+      return await fetchAllRepositories(githubClient, excludeTopics);
+    }
+  } catch (error) {
+    console.error('Error in get-repos:', error);
+    console.error('Error stack:', error.stack);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: 'Failed to fetch repositories',
+        details: error.message,
+        type: error.constructor.name
+      })
     };
   }
+};
+
+// Export for testing
+module.exports = {
+  handler: exports.handler,
+  checkForUpdates,
+  updateChangedRepos,
+  fetchAllRepositories
+};
+
+/**
+ * Check for repository updates by fetching only lightweight data
+ */
+async function checkForUpdates(githubClient, excludeTopics) {
+  console.log('=== CHECK FOR UPDATES START ===');
+  console.log('Timestamp:', new Date().toISOString());
+
+  try {
+    // Check if githubClient is properly initialized
+    console.log('Checking GitHub client initialization...');
+    console.log('githubClient exists:', !!githubClient);
+    console.log('githubClient.fetchRepositories exists:', !!githubClient?.fetchRepositories);
+    
+    if (!githubClient || !githubClient.fetchRepositories) {
+      console.error('GitHub client not properly initialized');
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          success: false,
+          error: 'GitHub client not initialized',
+          details: 'githubClient is missing or fetchRepositories method is not available'
+        })
+      };
+    }
+
+    // Check if username is set
+    console.log('Checking GitHub username...');
+    console.log('githubClient.username:', githubClient.username || 'NOT_SET');
+    
+    if (!githubClient.username) {
+      console.error('GitHub username not set in client');
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          success: false,
+          error: 'GitHub username not configured',
+          details: 'GitHub username is required to fetch repositories'
+        })
+      };
+    }
+
+    console.log(`Fetching repositories for user: ${githubClient.username}`);
+
+    // Fetch only name, updated_at, and pushed_at for all repos
+    let response;
+    try {
+      console.log('Calling githubClient.fetchRepositories...');
+      response = await githubClient.fetchRepositories({
+        per_page: 100,
+        sort: 'updated',
+        direction: 'desc'
+      });
+      console.log('GitHub API response received');
+      console.log('Response type:', typeof response);
+      console.log('Response is array:', Array.isArray(response));
+      console.log('Response length:', response?.length || 'N/A');
+    } catch (fetchError) {
+      console.error('Failed to fetch repositories from GitHub API');
+      console.error('Error message:', fetchError.message);
+      console.error('Error type:', fetchError.constructor.name);
+      console.error('Error stack:', fetchError.stack);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to fetch repositories from GitHub API',
+          details: fetchError.message
+        })
+      };
+    }
+
+    if (!Array.isArray(response)) {
+      console.error('Unexpected response format from GitHub API:', typeof response);
+      console.error('Response content:', JSON.stringify(response).substring(0, 500));
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid response from GitHub API',
+          details: 'Expected array of repositories'
+        })
+      };
+    }
+
+    const repos = response.filter(repo => !repo.fork);
+    console.log(`Fetched ${repos.length} non-forked repositories from ${response.length} total`);
+
+    // Apply exclude topics filtering
+    if (excludeTopics.length > 0) {
+      console.log(`Applying exclude topics filter with ${excludeTopics.length} topics...`);
+      const filtered = repos.filter(repo => {
+        const repoTopics = (repo.topics || []).map(t => t.toLowerCase());
+        const hasExcludedTopic = excludeTopics.some(excluded => repoTopics.includes(excluded));
+        return !hasExcludedTopic;
+      });
+      console.log(`Applied exclude topics filter: ${repos.length - filtered.length} repositories filtered out`);
+      repos.length = 0;
+      repos.push(...filtered);
+    }
+
+    // Load existing static data
+    console.log('Loading existing static data...');
+    let staticData;
+    try {
+      staticData = await staticDataManager.loadStaticData();
+      console.log('Static data loaded successfully');
+      console.log('Static data repositories count:', staticData?.repositories?.length || 0);
+    } catch (loadError) {
+      console.error('Error loading static data:', loadError.message);
+      console.error('Error type:', loadError.constructor.name);
+      staticData = null;
+    }
+
+    if (!staticData) {
+      console.log('No existing static data found, will perform full fetch');
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ needsFullFetch: true })
+      };
+    }
+
+    // Compare updated_at timestamps to find changed repos
+    console.log('Comparing repositories for changes...');
+    const changedRepos = [];
+    const unchangedRepos = [];
+
+    for (const repo of repos) {
+      try {
+        const existingRepo = staticData.repositories?.find(r => r.name === repo.name);
+        if (existingRepo) {
+          const existingUpdated = new Date(existingRepo.updated_at).getTime();
+          const currentUpdated = new Date(repo.updated_at).getTime();
+          const existingPushed = new Date(existingRepo.pushed_at || existingRepo.updated_at).getTime();
+          const currentPushed = new Date(repo.pushed_at).getTime();
+
+          // Consider repo changed if updated_at or pushed_at has changed
+          if (currentUpdated > existingUpdated || currentPushed > existingPushed) {
+            changedRepos.push({
+              name: repo.name,
+              updated_at: repo.updated_at,
+              pushed_at: repo.pushed_at
+            });
+          } else {
+            unchangedRepos.push(repo.name);
+          }
+        } else {
+          // New repository not in static data
+          changedRepos.push({
+            name: repo.name,
+            updated_at: repo.updated_at,
+            pushed_at: repo.pushed_at
+          });
+        }
+      } catch (comparisonError) {
+        console.error(`Error comparing repo ${repo.name}:`, comparisonError.message);
+      }
+    }
+
+    console.log(`Update check complete: ${changedRepos.length} changed repos, ${unchangedRepos.length} unchanged repos`);
+    console.log('=== CHECK FOR UPDATES END ===');
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        success: true,
+        needsFullFetch: false,
+        changedRepos: changedRepos,
+        unchangedRepos: unchangedRepos,
+        totalRepos: repos.length,
+        timestamp: new Date().toISOString()
+      })
+    };
+  } catch (error) {
+    console.error('=== CHECK FOR UPDATES ERROR ===');
+    console.error('Error checking for updates:', error);
+    console.error('Error message:', error.message);
+    console.error('Error type:', error.constructor.name);
+    console.error('Error stack:', error.stack);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        success: false,
+        error: 'Failed to check for updates',
+        details: error.message,
+        type: error.constructor.name
+      })
+    };
+  }
+}
+
+/**
+ * Update only the changed repositories
+ */
+async function updateChangedRepos(queryParams, githubClient, excludeTopics, body) {
+  console.log('Updating changed repositories...');
+  console.log('Query params:', queryParams);
+  console.log('Body:', body);
+
+  // Try to get changedRepos from body first (POST request), then from query params
+  let changedRepoNames;
+  
+  if (body && body.changedRepos) {
+    console.log('Using changedRepos from request body');
+    changedRepoNames = body.changedRepos;
+  } else if (queryParams && queryParams.changedRepos) {
+    console.log('Using changedRepos from query parameters');
+    changedRepoNames = JSON.parse(queryParams.changedRepos);
+  } else {
+    console.error('changedRepos parameter is required');
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'changedRepos parameter is required' })
+    };
+  }
+
+  console.log(`Updating ${changedRepoNames.length} changed repositories...`);
+
+  try {
+    // Load existing static data
+    const staticData = await staticDataManager.loadStaticData();
+
+    if (!staticData) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Failed to load existing static data' })
+      };
+    }
+
+    // Fetch full details for changed repositories
+    const updatedRepos = await fetchRepositoryDetails(changedRepoNames, githubClient, excludeTopics);
+
+    // Update static data
+    const updatedStaticData = staticDataManager.updateStaticData(staticData, updatedRepos);
+    await staticDataManager.saveStaticData(updatedStaticData);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        success: true,
+        updatedRepos: updatedRepos.length,
+        totalRepos: updatedStaticData.repositories.length,
+        timestamp: updatedStaticData.metadata.generatedAt
+      })
+    };
+  } catch (error) {
+    console.error('Error updating changed repositories:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Failed to update changed repositories', details: error.message })
+    };
+  }
+}
+
+/**
+ * Fetch all repositories with full details (original functionality)
+ */
+async function fetchAllRepositories(githubClient, excludeTopics) {
+  console.log(`Starting to fetch all repositories...`);
 
   try {
     // Fetch all repositories with pagination
@@ -141,27 +462,15 @@ exports.handler = async function (event, context) {
     let page = 1;
     const perPage = 100; // Maximum per page for GitHub API
 
-    console.log(`Starting to fetch repositories for ${GITHUB_USERNAME}...`);
+    while (true) {
+      const response = await githubClient.fetchRepositories({
+        per_page: perPage,
+        page: page,
+        sort: 'created',
+        direction: 'desc'
+      });
 
-while (true) {
-      const response = await fetch(
-        `${GITHUB_API_URL}/users/${GITHUB_USERNAME}/repos?per_page=${perPage}&page=${page}&sort=created&direction=desc`,
-        {
-          headers: {
-            'Accept': 'application/vnd.github.v3+json',
-            ...(GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {})
-          }
-        }
-      );
-
-      if (!response.ok) {
-        return {
-          statusCode: response.status,
-          body: JSON.stringify({ error: `Failed to fetch repositories: ${response.statusText}` })
-        };
-      }
-
-      const pageRepos = await response.json();
+      const pageRepos = response;
 
       if (pageRepos.length === 0) {
         // No more repositories to fetch
@@ -196,224 +505,208 @@ while (true) {
     }
 
     // Filter out forked repositories
-    const originalRepos = repositories.filter(repo => !repo.fork);
-    console.log(`Filtered out ${repositories.length - originalRepos.length} forked repositories. ${originalRepos.length} remaining.`);
-    repositories = originalRepos;
+    repositories = repositoryProcessor.filterForks(repositories);
+    console.log(`Filtered out ${repositories.length - repositories.length} forked repositories. ${repositories.length} remaining.`);
 
     // Fetch topics for each repository
     console.log(`Fetching topics for ${repositories.length} repositories...`);
-    const reposWithTopics = await fetchRepositoryTopics(repositories, GITHUB_USERNAME, GITHUB_TOKEN);
+    const reposWithTopics = await fetchRepositoryTopics(repositories, githubClient);
     repositories = reposWithTopics;
 
     // Apply exclude topics filtering
     if (excludeTopics.length > 0) {
       const beforeFilter = repositories.length;
-      repositories = repositories.filter(repo => {
-        const repoTopics = (repo.topics || []).map(t => t.toLowerCase());
-        const hasExcludedTopic = excludeTopics.some(excluded => repoTopics.includes(excluded));
-        return !hasExcludedTopic;
-      });
+      repositories = repositories.filter(repo => !repositoryProcessor.shouldExcludeRepository(repo));
       const afterFilter = repositories.length;
       console.log(`Applied exclude topics filter: ${beforeFilter - afterFilter} repositories filtered out, ${afterFilter} remaining.`);
     } else {
       console.log('No exclude topics configured, skipping topic filtering.');
     }
 
-    // Add homepageUrl to each repository
-    for (const repo of repositories) {
-      repo.homepageUrl = repo.homepage || '';
-    }
+    // Add homepage URL to repositories
+    repositories = repositoryProcessor.addHomepageUrls(repositories);
 
-    // Repositories are already sorted by creation date (descending) from API
-    // But we'll keep the sort for consistency
-    repositories.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    // Sort repositories by creation date
+    repositories = repositoryProcessor.sortByCreationDate(repositories);
 
-// Check if each repository has a README and fetch languages
-    // Use Promise.all with concurrency limit to avoid rate limiting
-    const processRepos = async (repos) => {
-      const results = [];
-      const batchSize = 5; // Process 5 repos at a time
+    // Process repositories for README and screenshots
+    console.log(`Processing ${repositories.length} repositories for README and screenshots...`);
+    repositories = await repositoryProcessor.processRepositories(repositories, githubClient.username);
 
-      for (let i = 0; i < repos.length; i += batchSize) {
-        const batch = repos.slice(i, i + batchSize);
+    // Create static data structure
+    const staticData = staticDataManager.createStaticData(repositories, githubClient.username, excludeTopics);
 
-        const batchPromises = batch.map(async (repo) => {
-          try {
-            // Check README
-            const readmeResponse = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_USERNAME}/${repo.name}/readme`, {
-              headers: {
-                'Accept': 'application/vnd.github.v3+json',
-                ...(GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {})
-              }
-            });
-            repo.hasReadme = readmeResponse.ok;
-
-            // Fetch README content if available
-            if (readmeResponse.ok) {
-              const readmeData = await readmeResponse.json();
-              let readmeContent;
-              if (readmeData.encoding === 'base64') {
-                readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
-              } else {
-                readmeContent = readmeData.content;
-              }
-              repo.readmeContent = readmeContent;
-            } else {
-              repo.readmeContent = null;
-            }
-          } catch (readmeError) {
-            console.error(`Error checking README for ${repo.name}:`, readmeError.message);
-            repo.hasReadme = false;
-            repo.readmeContent = null;
-          }
-
-          try {
-            // Fetch languages
-            const langResponse = await fetch(`${GITHUB_API_URL}/repos/${GITHUB_USERNAME}/${repo.name}/languages`, {
-              headers: {
-                'Accept': 'application/vnd.github.v3+json',
-                ...(GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {})
-              }
-            });
-
-            if (langResponse.ok) {
-              repo.languages = await langResponse.json();
-            } else {
-              repo.languages = {};
-            }
-          } catch (langError) {
-            console.error(`Error fetching languages for ${repo.name}:`, langError.message);
-            repo.languages = {};
-          }
-
-          return repo;
-        });
-
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...batchResults);
-
-        // Add small delay between batches to be respectful to the API
-        if (i + batchSize < repos.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-
-      return results;
-    };
-
-    console.log(`Processing ${repositories.length} repositories for README and languages...`);
-    repositories = await processRepos(repositories);
-
-    // Add screenshot URLs and full README content from README images
-    repositories = await addScreenshotUrlsAndReadmeContent(repositories, GITHUB_USERNAME, GITHUB_TOKEN);
-    // Cache the result
-    cache.setInCache(cacheKey, repositories);
-
-    console.log(`Final result: ${repositories.length} repositories`);
+    // Save static data
+    await staticDataManager.saveStaticData(staticData);
 
     return {
       statusCode: 200,
-      body: JSON.stringify(repositories),
+      body: JSON.stringify(staticData),
       headers: {
         'X-Cache': 'MISS'
       }
     };
   } catch (error) {
-    console.error('Error fetching repositories:', error);
+    console.error('Error fetching all repositories:', error);
     console.error('Error stack:', error.stack);
     return {
       statusCode: 500,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         error: 'Failed to fetch repositories',
         details: error.message,
         type: error.constructor.name
       })
     };
   }
-};
+}
+
+/**
+ * Fetch repository details for specific repositories
+ */
+async function fetchRepositoryDetails(repoNames, githubClient, excludeTopics) {
+  console.log(`Fetching details for ${repoNames.length} specific repositories...`);
+
+  const results = [];
+  const batchSize = 5;
+
+  for (let i = 0; i < repoNames.length; i += batchSize) {
+    const batch = repoNames.slice(i, i + batchSize);
+
+    const batchPromises = batch.map(async (repoName) => {
+      try {
+        // Fetch repository info
+        const repo = await githubClient.fetchRepositoryDetails(repoName);
+
+        // Fetch topics
+        try {
+          const topicsData = await githubClient.fetchRepositoryTopics(repoName);
+          repo.topics = topicsData.names || [];
+        } catch (error) {
+          console.error(`Error fetching topics for ${repoName}:`, error.message);
+          repo.topics = [];
+        }
+
+        // Apply exclude topics filtering
+        if (excludeTopics.length > 0 && repositoryProcessor.shouldExcludeRepository(repo)) {
+          console.log(`Repository ${repoName} excluded due to topic filtering`);
+          return null;
+        }
+
+        // Check README
+        try {
+          const readmeResponse = await githubClient.fetchRepositoryReadme(repoName);
+          repo.hasReadme = readmeResponse.ok;
+
+          // Fetch README content if available
+          if (readmeResponse.ok) {
+            const readmeData = await readmeResponse.json();
+            let readmeContent;
+            if (readmeData.encoding === 'base64') {
+              readmeContent = Buffer.from(readmeData.content, 'base64').toString('utf8');
+            } else {
+              readmeContent = readmeData.content;
+            }
+            repo.readmeContent = readmeContent;
+          } else {
+            repo.readmeContent = null;
+          }
+        } catch (readmeError) {
+          console.error(`Error checking README for ${repoName}:`, readmeError.message);
+          repo.hasReadme = false;
+          repo.readmeContent = null;
+        }
+
+        // Fetch languages
+        try {
+          const langResponse = await githubClient.fetchRepositoryLanguages(repoName);
+          repo.languages = await langResponse.json();
+        } catch (langError) {
+          console.error(`Error fetching languages for ${repoName}:`, langError.message);
+          repo.languages = {};
+        }
+
+        // Add homepageUrl
+        repo.homepageUrl = repo.homepage || '';
+
+        return repo;
+      } catch (error) {
+        console.error(`Error processing ${repoName}:`, error.message);
+        return null;
+      }
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    const validResults = batchResults.filter(r => r !== null);
+    results.push(...validResults);
+
+    if (i + batchSize < repoNames.length) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+
+  return results;
+}
 
 /**
  * Fetch topics for each repository
  */
-async function fetchRepositoryTopics(repositories, username, token) {
+async function fetchRepositoryTopics(repositories, githubClient) {
   const results = [];
   const batchSize = 5; // Process 5 repos at a time to avoid rate limiting
-  
+
   for (let i = 0; i < repositories.length; i += batchSize) {
     const batch = repositories.slice(i, i + batchSize);
-    
+
     const batchPromises = batch.map(async (repo) => {
       try {
-        const topicsResponse = await fetch(
-          `https://api.github.com/repos/${username}/${repo.name}/topics`,
-          {
-            headers: {
-              'Accept': 'application/vnd.github.v3+json',
-              ...(token ? { 'Authorization': `token ${token}` } : {})
-            }
-          }
-        );
-        
-        if (topicsResponse.ok) {
-          const topicsData = await topicsResponse.json();
-          repo.topics = topicsData.names || [];
-        } else {
-          repo.topics = [];
-        }
+        const topicsData = await githubClient.fetchRepositoryTopics(repo.name);
+        repo.topics = topicsData.names || [];
       } catch (error) {
         console.error(`Error fetching topics for ${repo.name}:`, error.message);
         repo.topics = [];
       }
-      
+
       return repo;
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
-    
+
     // Add small delay between batches
     if (i + batchSize < repositories.length) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
-  
+
   return results;
 }
 
 /**
  * Add screenshot URLs and full README content from README images
  */
-async function addScreenshotUrlsAndReadmeContent(repositories, username, token) {
+async function addScreenshotUrlsAndReadmeContent(repositories, githubClient) {
   const results = [];
   const batchSize = 5; // Process 5 repos at a time
-  
+
   for (let i = 0; i < repositories.length; i += batchSize) {
     const batch = repositories.slice(i, i + batchSize);
-    
+
     const batchPromises = batch.map(async (repo) => {
       try {
         // Only process repos that have READMEs
         if (!repo.hasReadme) {
           return { ...repo, screenshotUrl: null, readmeContent: null };
         }
-        
+
         // Fetch README content
-        const readmeResponse = await fetch(
-          `https://api.github.com/repos/${username}/${repo.name}/readme`,
-          {
-            headers: {
-              'Accept': 'application/vnd.github.v3+json',
-              ...(token ? { 'Authorization': `token ${token}` } : {})
-            }
-          }
-        );
-        
+        const readmeResponse = await githubClient.fetchRepositoryReadme(repo.name);
+
         if (!readmeResponse.ok) {
           return { ...repo, screenshotUrl: null, readmeContent: null };
         }
-        
+
         const readmeData = await readmeResponse.json();
-        
+
         // Decode base64 content
         let readmeContent;
         if (readmeData.encoding === 'base64') {
@@ -421,15 +714,15 @@ async function addScreenshotUrlsAndReadmeContent(repositories, username, token) 
         } else {
           readmeContent = readmeData.content;
         }
-        
+
         // Try to extract first image from markdown
         const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
         const markdownMatch = readmeContent.match(markdownImageRegex);
-        
+
         let screenshotUrl = null;
         if (markdownMatch && markdownMatch[1]) {
           let imageUrl = markdownMatch[1];
-          
+
           // Handle relative URLs in markdown
           if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/') ||
               imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
@@ -438,9 +731,9 @@ async function addScreenshotUrlsAndReadmeContent(repositories, username, token) 
             if (cleanPath.startsWith('./')) {
               cleanPath = cleanPath.replace(/^\.\//, '');
             }
-            imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+            imageUrl = `https://raw.githubusercontent.com/${githubClient.username}/${repo.name}/main/${cleanPath}`;
           }
-          
+
           // Skip data URLs
           if (imageUrl.startsWith('data:')) {
             screenshotUrl = null;
@@ -448,20 +741,20 @@ async function addScreenshotUrlsAndReadmeContent(repositories, username, token) 
             screenshotUrl = imageUrl;
           }
         }
-        
+
         // Map GitHub raw URLs to local paths to match build-data.js behavior
         // This ensures consistency between static and dynamic data
         let localScreenshotUrl = null;
-        
+
         if (screenshotUrl && screenshotUrl.startsWith('https://raw.githubusercontent.com/')) {
           // Extract the filename from the GitHub URL
           const urlParts = screenshotUrl.split('/');
           const filename = urlParts[urlParts.length - 1];
-          
+
           // Check if this matches common screenshot naming patterns
           // The build-data.js downloads images with repo name as filename
           const expectedLocalPath = `/images/repos/${repo.name}${path.extname(filename)}`;
-          
+
           // For now, use the local path pattern that build-data.js creates
           // This assumes the image was downloaded during build
           localScreenshotUrl = expectedLocalPath;
@@ -469,28 +762,28 @@ async function addScreenshotUrlsAndReadmeContent(repositories, username, token) 
           // If it's already a local path or other URL, keep it
           localScreenshotUrl = screenshotUrl;
         }
-        
-        return { 
-          ...repo, 
+
+        return {
+          ...repo,
           screenshotUrl: localScreenshotUrl,
-          readmeContent: readmeContent 
+          readmeContent: readmeContent
         };
-        
+
       } catch (error) {
         console.error(`Error extracting image from ${repo.name} README:`, error.message);
         return { ...repo, screenshotUrl: null, readmeContent: null };
       }
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
-    
+
     // Add small delay between batches
     if (i + batchSize < repositories.length) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
-  
+
   return results;
 }
 

@@ -13,6 +13,9 @@
  * - public/images/repos/ - Downloaded screenshot images
  */
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -603,7 +606,8 @@ async function build() {
         username: CONFIG.GITHUB_USERNAME,
         userProfile: userProfile,
         totalRepos: repositories.length,
-        languageStats: getLanguageStats(repositories)
+        languageStats: getLanguageStats(repositories),
+        excludeTopics: CONFIG.EXCLUDE_TOPICS
       },
       repositories: repositories
     };

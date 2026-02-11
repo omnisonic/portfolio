@@ -114,8 +114,8 @@ portfolio-site/
 - **Search Functionality**: Filter repositories by name or description
 - **Language Detection**: Shows programming languages used in each repository
 - **Star Count Display**: Shows repository popularity with star counts
-- **Live Updates**: Data is fetched in real-time from GitHub API
-- **Repository Screenshots**: Automatic screenshot matching with flexible naming patterns
+- **Build-time Data with Runtime Updates**: Static data generated at build time, with runtime timestamp checking for efficient updates
+- **Repository Screenshots**: Automatic screenshot matching during runtime updates with flexible naming patterns
 - **SEO Optimized**: Semantic HTML and meta tags for better search engine visibility
 - **Fast Loading**: Optimized assets and lazy loading for better performance
 - **Build-time Processing**: Screenshot matching happens at deployment, not runtime
@@ -135,6 +135,12 @@ portfolio-site/
 
 ## Development
 
+- **Build-time Data Generation**: Static data is generated at build time using GitHub API
+- **Runtime Timestamp Checking**: On page reload, the application checks if any repositories have been updated by comparing timestamps
+- **Efficient Updates**: Only repositories that have changed since the last build are updated at runtime
+- **Repository Screenshots**: Screenshots are extracted from README content during runtime updates for optimal performance
+
+
 ### Local Development
 
 1. **Open the project:**
@@ -143,27 +149,8 @@ portfolio-site/
    ```
 
 2. **View your portfolio:**
-   The site will automatically fetch and display your GitHub repositories using public API (60 requests/hour)
+   The site will display your GitHub repositories using static data generated at build time. On page reload, the application checks for updates by comparing repository timestamps and updates only the repositories that have changed.
 
-### Repository Screenshots
-
-This portfolio supports automatic screenshot matching for repository previews:
-
-1. **Add screenshots** to `assets/screenshots/` folder
-2. **Flexible naming** - supports various patterns:
-   - `repo-name.png`
-   - `Screenshot repo-name preview.JPG`
-   - `repo-name-screenshot.png`
-3. **Build-time matching** - screenshots are matched during deployment
-4. **No client-side processing** - all matching happens server-side
-
-**Example:**
-For repository "chords-scale-chart", add:
-- `Screenshot chords scale chart preview.JPG` ✓
-- `chords-scale-chart.png`
-- `chords-scale-chart-preview.png`
-
-See `assets/screenshots/README.md` for detailed naming patterns.
 
 ### Netlify Development
 

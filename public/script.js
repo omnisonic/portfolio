@@ -15,20 +15,6 @@ let repositories = [];
 let filteredRepositories = [];
 let userProfile = null;
 
-// Initialize the application
-async function init() {
-    try {
-        // Load repositories first to get static data
-        await loadRepositories();
-        
-        // Then fetch user profile (will use static data if available)
-        await fetchUserProfile();
-        
-        setupEventListeners();
-    } catch (error) {
-        showError('Failed to initialize application. Please try again later.');
-    }
-}
 
 // Load repositories - tries static data first, falls back to dynamic
 async function loadRepositories() {
@@ -46,6 +32,31 @@ async function loadRepositories() {
             
             // Use repositories from static data
             repositories = staticData.repositories || [];
+            
+            // Apply exclude topics filtering from static data metadata
+            if (staticData.metadata && staticData.metadata.excludeTopics) {
+                const excludeTopics = staticData.metadata.excludeTopics;
+                console.log(`Exclude topics configured: ${excludeTopics.length > 0 ? excludeTopics.join(', ') : '(none)'}`);
+                
+                if (excludeTopics.length > 0) {
+                    const beforeFilter = repositories.length;
+                    repositories = repositories.filter(repo => {
+                        const repoTopics = (repo.topics || []).map(t => t.toLowerCase());
+                        const hasExcludedTopic = excludeTopics.some(excluded => repoTopics.includes(excluded));
+                        
+                        // Log when a repository is excluded
+                        if (hasExcludedTopic) {
+                            const excludedTopic = excludeTopics.find(excluded => repoTopics.includes(excluded));
+                            console.log(`Excluding repository "${repo.name}" because it contains excluded topic "${excludedTopic}". Repository topics: ${repoTopics.join(', ')}`);
+                        }
+                        
+                        return !hasExcludedTopic;
+                    });
+                    const afterFilter = repositories.length;
+                    console.log(`Applied exclude topics filter from static data: ${beforeFilter - afterFilter} repositories filtered out, ${afterFilter} remaining.`);
+                }
+            }
+            
             filteredRepositories = [...repositories];
             
             console.log('Loaded', repositories.length, 'repositories from static data');
@@ -135,6 +146,9 @@ async function fetchRepositories() {
         repositories = await response.json();
         console.log('Repositories fetched:', repositories.length, 'repositories');
 
+        // Note: The Netlify function already applies exclude topics filtering
+        // So we don't need to filter again here
+        
         filteredRepositories = [...repositories];
         console.log('Repositories ready for rendering:', filteredRepositories.length);
         renderRepositories();
@@ -357,25 +371,25 @@ function debounce(func, wait) {
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    
+
     // Set up event delegation for repo card buttons
     document.addEventListener('click', (e) => {
         const repoCard = e.target.closest('.repo-card');
         if (!repoCard) return;
-        
+
         const originalRepoName = repoCard.dataset.repoName;
         const homepageUrl = repoCard.dataset.homepage;
         const hasReadme = repoCard.dataset.hasReadme === 'true';
         const repoDescription = repoCard.dataset.description;
-        
+
         // Get the formatted title for display purposes
         const formattedTitle = repoCard.querySelector('h2').textContent;
-        
+
         // Homepage button - opens in new tab directly
         if (e.target.closest('.repo-homepage') && homepageUrl) {
             console.log('Homepage button clicked - opening in new tab:', homepageUrl);
             window.open(homepageUrl, '_blank');
-        } 
+        }
         // README button - shows README modal
         else if (e.target.closest('.repo-readme') && hasReadme) {
             console.log('README button clicked for repo:', originalRepoName);
@@ -505,3 +519,142 @@ function fetchPortfolioReadme() {
 const script = document.createElement('script');
 script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
 document.head.appendChild(script);
+
+// Add user-triggered update checking
+function checkForUpdatesOnReload() {
+    console.log('=== UPDATE CHECK START ===');
+    console.log('Checking for updates on page reload...');
+    console.log('Timestamp:', new Date().toISOString());
+    
+    // First check if static data exists
+    fetch('/.netlify/functions/get-repos?mode=check')
+        .then(response => {
+            console.log('=== UPDATE CHECK RESPONSE ===');
+            console.log('Response status:', response.status);
+            console.log('Response statusText:', response.statusText);
+            console.log('Response headers:', {
+                'content-type': response.headers.get('content-type'),
+                'content-length': response.headers.get('content-length')
+            });
+            console.log('Response ok:', response.ok);
+            
+            if (!response.ok) {
+                console.error('Response not OK, attempting to read error body...');
+                return response.text().then(text => {
+                    console.error('Error response body:', text);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                });
+            }
+            
+            console.log('Response OK, parsing JSON...');
+            return response.json();
+        })
+        .then(data => {
+            console.log('=== UPDATE CHECK DATA RECEIVED ===');
+            console.log('Data:', JSON.stringify(data, null, 2));
+            console.log('Data type:', typeof data);
+            console.log('Data keys:', Object.keys(data || {}));
+            
+            if (data.error) {
+                console.error('Error in response:', data.error);
+                console.error('Error details:', data.details || 'No details provided');
+                return;
+            }
+            
+            if (!data.success && data.needsFullFetch !== true) {
+                console.error('Update check failed - success is false and needsFullFetch is not true');
+                console.error('Response data:', data);
+                return;
+            }
+            
+            // If no static data exists, perform full fetch
+            if (data.needsFullFetch) {
+                console.log('No static data found, performing full fetch...');
+                fetch('/.netlify/functions/get-repos?mode=full')
+                    .then(response => {
+                        console.log('Full fetch response status:', response.status);
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                console.error('Full fetch error body:', text);
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(fullData => {
+                        console.log('Full data fetched successfully');
+                        console.log('Repositories count:', fullData.repositories?.length || 'N/A');
+                    })
+                    .catch(error => {
+                        console.error('Error fetching full data:', error);
+                        console.error('Error message:', error.message);
+                        console.error('Error stack:', error.stack);
+                    });
+            } else if (data.changedRepos && data.changedRepos.length > 0) {
+                // If changes found, update only changed repositories
+                console.log(`Found ${data.changedRepos.length} changed repositories, updating...`);
+                console.log('Changed repos:', data.changedRepos.map(r => r.name));
+                
+                fetch('/.netlify/functions/get-repos?mode=update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        changedRepos: data.changedRepos.map(repo => repo.name)
+                    })
+                })
+                .then(response => {
+                    console.log('Update response status:', response.status);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Update error body:', text);
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(updateData => {
+                    console.log('Repository update result:', updateData);
+                    if (updateData.success) {
+                        console.log(`Updated ${updateData.updatedRepos} repositories`);
+                    } else {
+                        console.error('Failed to update repositories:', updateData);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating repositories:', error);
+                    console.error('Error message:', error.message);
+                    console.error('Error stack:', error.stack);
+                });
+            } else {
+                console.log('No changes found, static data is up to date');
+                console.log('Unchanged repos count:', data.unchangedRepos?.length || 0);
+            }
+        })
+        .catch(error => {
+            console.error('=== UPDATE CHECK ERROR ===');
+            console.error('Error checking for updates:', error);
+            console.error('Error message:', error.message);
+            console.error('Error type:', error.constructor.name);
+            console.error('Error stack:', error.stack);
+        });
+}
+
+// Initialize the application
+async function init() {
+    try {
+        // Load repositories first to get static data
+        await loadRepositories();
+        
+        // Then fetch user profile (will use static data if available)
+        await fetchUserProfile();
+        
+        setupEventListeners();
+        
+        // Check for updates on page reload
+        checkForUpdatesOnReload();
+    } catch (error) {
+        showError('Failed to initialize application. Please try again later.');
+    }
+}
