@@ -143,6 +143,28 @@ portfolio-site/
 - **Efficient Updates**: Only repositories that have changed since the last build are updated at runtime
 - **Repository Screenshots**: Screenshots are extracted from README content during runtime updates for optimal performance
 
+### Important: Embedded Data in Netlify Functions
+
+**The Challenge:** Netlify's serverless functions run in a read-only environment where the file system structure at runtime differs from the build environment. The `public/data/repos.json` file generated during build is not accessible to functions at runtime.
+
+**The Solution:** Use **embedded data** - the build process (`build-data.js`) generates `netlify/functions/embedded-data.js` which contains the static repository data as a JavaScript module. This file is bundled with the function code and is always available at runtime.
+
+**Implementation Details:**
+```javascript
+// At the top of get-repos.js, embedded data is loaded at module initialization
+let EMBEDDED_DATA = null;
+try {
+  EMBEDDED_DATA = require('./embedded-data.js');
+} catch (error) {
+  console.warn('Embedded data not available:', error.message);
+}
+
+// In check mode, use embedded data directly (not file system)
+let staticData = EMBEDDED_DATA;
+```
+
+**Key Insight:** Without embedded data, the `check` mode cannot compare current GitHub data against the last known state, forcing a full fetch every time. Embedded data enables efficient differential updates by providing the baseline for comparison.
+
 
 ### Local Development
 
