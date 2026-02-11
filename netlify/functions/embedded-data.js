@@ -5,12 +5,12 @@
  * It contains the static repository data embedded directly in the function code,
  * eliminating the need for file system reads in the Netlify runtime environment.
  * 
- * Generated at: 2026-02-11T18:51:34.430Z
+ * Generated at: 2026-02-11T21:35:31.947Z
  */
 
 const EMBEDDED_DATA = {
   "metadata": {
-    "generatedAt": "2026-02-11T18:51:34.428Z",
+    "generatedAt": "2026-02-11T21:35:31.945Z",
     "username": "omnisonic",
     "userProfile": {
       "login": "omnisonic",
@@ -51,18 +51,18 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/portfolio",
       "homepage": null,
       "created_at": "2026-02-06T20:43:40Z",
-      "updated_at": "2026-02-11T18:09:37Z",
-      "pushed_at": "2026-02-11T18:08:58Z",
+      "updated_at": "2026-02-11T18:54:22Z",
+      "pushed_at": "2026-02-11T18:54:18Z",
       "topics": [
         "feature"
       ],
       "languages": {
-        "JavaScript": 99751,
+        "JavaScript": 185856,
         "CSS": 26639,
         "HTML": 3150
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/portfolio.webp?v=1770835894427",
+      "screenshotUrl": "/images/repos/portfolio.webp?v=1770845731944",
       "readmeContent": "# Portfolio Site with GitHub API\n\n![Photo](/images/repos/portfolio.webp)\n\n\nA modern portfolio website that dynamically displays GitHub repositories and projects using the GitHub API. This site showcases my development work and provides an interactive way to explore my projects.\n\n![Portfolio Screenshot](assets/screenshots/Screenshot%20Portfolio.JPG)\n\n\n## Table of Contents\n- [About the Project](#about-the-project)\n- [Getting Started](#getting-started)\n- [Prerequisites](#prerequisites)\n- [Installation](#installation)\n- [Configuration](#configuration)\n- [Project Structure](#project-structure)\n- [Technologies Used](#technologies-used)\n- [Features](#features)\n- [API Reference](#api-reference)\n- [Development](#development)\n- [Deployment](#deployment)\n- [License](#license)\n\n## About the Project\n\nThis portfolio website is designed to showcase my development projects and GitHub repositories in a clean, modern interface. The site dynamically fetches data from the GitHub API to display up-to-date information about my repositories, including names, descriptions, programming languages, and star counts.\n\n\nThe website is built with modern web technologies and follows responsive design principles to ensure optimal viewing experience across all devices, from desktop computers to mobile phones.\n\n## Getting Started\n\nTo run this project locally, follow these steps:\n\n1. Clone the repository\n2. Install dependencies\n3. Configure the GitHub API\n4. Start the development server\n\n## Prerequisites\n\nBefore you begin, ensure you have the following installed on your system:\n\n- **Node.js** (v14.0.0 or higher)\n- **npm** (v6.0.0 or higher)\n- **Git** (for cloning the repository)\n- **A GitHub account** (for API access)\n\n## Installation\n\n1. **Clone the repository:**\n   ```bash\n   git clone https://github.com/your-username/your-repository.git\n   cd your-repository\n   ```\n\n2. **Open the project:**\n   ```bash\n   open index.html\n   ```\n\n## Configuration\n\n### GitHub API Setup\n\n1. **Update GitHub username:**\n   Open `script.js` and replace `'username'` with your actual GitHub username:\n   ```javascript\n   const GITHUB_USERNAME = 'username'; // Replace with your GitHub username\n   const USE_PUBLIC_API = true; // Set to true to use public API (60 requests/hour)\n   ```\n\n2. **Netlify Functions:**\n   - For production deployment on Netlify, use serverless functions\n   - Create a Netlify function to handle GitHub API calls securely\n   - Add your GitHub token to Netlify environment variables\n   - No client-side token exposure\n\n3. **Local Development:**\n   - For local development, you can still use environment variables\n   - Add your GitHub token to your `.zshenv` file:\n     ```bash\n     export GITHUB_TOKEN=your_token_here\n     ```\n   - Reload your shell: `source ~/.zshenv`\n\n## Project Structure\n\n```\nportfolio-site/\n├── src/\n│   ├── components/     # React components\n│   ├── styles/        # CSS stylesheets\n│   ├── utils/         # Utility functions\n│   └── api/           # API integration code\n├── public/            # Static assets\n├── tests/             # Test files\n├── .env.example       # Environment variables template\n├── package.json       # Dependencies and scripts\n└── README.md          # This file\n```\n\n## Technologies Used\n\n- **HTML5**: Semantic markup for content structure\n- **CSS3**: Modern styling with Flexbox and Grid layouts\n- **JavaScript (ES6+)**: Modern JavaScript features for better code organization\n- **GitHub API**: RESTful API for fetching repository data\n- **Git**: Version control system\n\n## Features\n\n- **Dynamic Repository Display**: Automatically fetches and displays GitHub repositories\n- **Responsive Design**: Optimized for desktop, tablet, and mobile devices\n- **Modern UI**: Clean, minimalist design with smooth animations\n- **Search Functionality**: Filter repositories by name or description\n- **Language Detection**: Shows programming languages used in each repository\n- **Star Count Display**: Shows repository popularity with star counts\n- **Build-time Data with Runtime Updates**: Static data generated at build time, with runtime timestamp checking for efficient updates\n- **Repository Screenshots**: Automatic screenshot matching during runtime updates with flexible naming patterns\n- **SEO Optimized**: Semantic HTML and meta tags for better search engine visibility\n- **Fast Loading**: Optimized assets and lazy loading for better performance\n- **Build-time Processing**: Screenshot matching happens at deployment, not runtime\n\n## API Reference\n\n### GitHub API Endpoints Used\n\n- **GET** `/users/{username}/repos` - Fetch user repositories\n- **GET** `/repos/{owner}/{repo}` - Get repository details\n- **GET** `/repos/{owner}/{repo}/languages` - Get repository languages\n\n### Rate Limiting\n\n- **Unauthenticated requests**: 60 requests per hour\n- **Authenticated requests**: 5,000 requests per hour\n\n## Development\n\n- **Build-time Data Generation**: Static data is generated at build time using GitHub API\n- **Runtime Timestamp Checking**: On page reload, the application checks if any repositories have been updated by comparing timestamps\n- **Efficient Updates**: Only repositories that have changed since the last build are updated at runtime\n- **Repository Screenshots**: Screenshots are extracted from README content during runtime updates for optimal performance\n\n\n### Local Development\n\n1. **Open the project:**\n   ```bash\n   open index.html\n   ```\n\n2. **View your portfolio:**\n   The site will display your GitHub repositories using static data generated at build time. On page reload, the application checks for updates by comparing repository timestamps and updates only the repositories that have changed.\n\n\n### Netlify Development\n\n1. **Install Netlify CLI:**\n   ```bash\n   npm install -g netlify-cli\n   ```\n\n2. **Login to Netlify:**\n   ```bash\n   netlify login\n   ```\n\n3. **Link to Netlify site:**\n   ```bash\n   netlify link\n   ```\n\n4. **Start development server:**\n   ```bash\n   netlify dev\n   ```\n\n5. **View your portfolio:**\n   The site will automatically fetch and display your GitHub repositories using authenticated API (5,000 requests/hour)\n\n### Code Style\n\nThis project follows standard JavaScript conventions with ESLint and Prettier for code consistency.\n\n### Contributing\n\n1. Fork the repository\n2. Create a feature branch\n3. Make your changes\n4. Add tests if applicable\n5. Submit a pull request\n\n## Deployment\n\n### Netlify Deployment\n\n1. **Connect to Netlify:**\n   - Log in to Netlify\n   - Click \"New site from Git\"\n   - Select your repository\n\n2. **Configure Build Settings:**\n   - Build command: `npm run build`\n   - Publish directory: `build/`\n\n3. **Environment Variables:**\n   - Add GitHub token in Netlify UI\n   - Save and deploy\n\n4. **Custom Domain (Optional):**\n   - Add your custom domain\n   - Configure DNS settings\n\n## License\n\nThis project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.\n\n## Support\n\nFor support or questions about this project, please:\n\n- Open an issue in the repository\n- Contact me directly via email\n\n---\n\n**Last Updated:** February 2026",
       "homepageUrl": ""
     },
@@ -80,7 +80,7 @@ const EMBEDDED_DATA = {
         "Python": 10807
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/portfolio-chatbot.jpg?v=1770835894427",
+      "screenshotUrl": "/images/repos/portfolio-chatbot.jpg?v=1770845731944",
       "readmeContent": "# Portfolio Chatbot - Standalone Streamlit App\n\n\nA standalone Streamlit chatbot that answers questions about a creative professional's portfolio using OpenAI API via OpenRouter.\n\n![Portfolio Screenshot](/images/repos/portfolio-chatbot.JPG)\n\n## Features\n\n- Chat interface with portfolio-specific Q&A\n- Custom assistant avatar display\n- Multiple LLM engine selection\n- Portfolio context integration\n- Image display support in responses\n\n## Setup\n\n### 1. Install Dependencies\n\n```bash\npip install -r requirements.txt\n```\n\n### 2. Configure Secrets\n\nCreate a `.streamlit/secrets.toml` file or configure these secrets in Streamlit Cloud:\n\n```toml\nOPENROUTER_API_KEY = \"your-openrouter-api-key-here\"\n# Optional:\nOPENROUTER_BASE_URL = \"https://openrouter.ai/api/v1\"\nMODEL_NAME = \"xiaomi/mimo-v2-flash:free\"\n```\n\n### 3. Run Locally\n\n```bash\nstreamlit run main.py\n```\n\n## Deployment to Streamlit Cloud\n\n1. **Push to GitHub**: Upload this entire folder to a GitHub repository\n2. **Connect to Streamlit Cloud**: \n   - Go to [share.streamlit.io](https://share.streamlit.io)\n   - Connect your GitHub account\n   - Select your repository and this folder\n3. **Configure Secrets**: Add the required secrets in the Streamlit Cloud dashboard\n4. **Deploy**: Click \"Deploy\" and wait for the app to build\n\n## File Structure\n\n```\nportfolio-chatbot/\n├── main.py                 # Main Streamlit application\n├── requirements.txt        # Python dependencies\n├── scraped_data.json       # Portfolio data\n├── images/\n│   └── rudy_avatar_sm.jpg  # Assistant avatar\n└── README.md              # This file\n```\n\n## Required Secrets\n\n- `OPENROUTER_API_KEY`: Your OpenRouter API key\n- `OPENROUTER_BASE_URL` (optional): API base URL (defaults to OpenRouter)\n- `MODEL_NAME` (optional): Model selection (defaults to xiaomi/mimo-v2-flash:free)\n\n## Usage\n\n1. Start a conversation by typing in the chat input\n2. Ask questions about the portfolio work\n3. The bot will respond using the portfolio context\n4. Images mentioned in responses will be displayed automatically\n\n## Notes\n\n- The app uses Streamlit's built-in chat interface for user messages\n- Assistant messages display with a custom avatar (300px width)\n- Portfolio data is loaded from `scraped_data.json`\n- The app supports multiple LLM engines via the sidebar selection\n",
       "homepageUrl": "https://portfolio-rudy-chat.streamlit.app/"
     },
@@ -100,7 +100,7 @@ const EMBEDDED_DATA = {
         "CSS": 1112
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/chords-and-scale-charts.webp?v=1770835894427",
+      "screenshotUrl": "/images/repos/chords-and-scale-charts.webp?v=1770845731944",
       "readmeContent": "# Repository\n\n![Photo](/images/repos/chords-and-scale-charts.webp)\n\n\n![Photo](images/screenshot-2026-02-08-at-10.31.26am.jpg)\n\n\n",
       "homepageUrl": "https://omnisonic.github.io/chords-and-scale-charts/"
     },
@@ -300,7 +300,7 @@ const EMBEDDED_DATA = {
         "CSS": 103036
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/rudy.webp?v=1770835894427",
+      "screenshotUrl": "/images/repos/rudy.webp?v=1770845731944",
       "readmeContent": "# Repository\n\n![Photo](/images/repos/rudy.webp)\n\n\n",
       "homepageUrl": "https://main.d2ii0lci9gh71j.amplifyapp.com/"
     },

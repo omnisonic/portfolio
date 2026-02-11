@@ -27,6 +27,15 @@ async function loadRepositories() {
             const staticData = await staticResponse.json();
             console.log('Static data found:', staticData);
             
+            // Display server logs if available
+            if (staticData.logs) {
+                console.log('=== SERVER LOGS ===');
+                staticData.logs.forEach(log => {
+                    console.log(`[${log.timestamp}] ${log.message}`);
+                });
+                console.log('=== END SERVER LOGS ===');
+            }
+            
             // Store static data globally for other functions to use
             window.staticData = staticData;
             
@@ -71,6 +80,7 @@ async function loadRepositories() {
     console.log('Using dynamic fetch as fallback...');
     await fetchRepositories();
 }
+
 
 // Fetch user profile from static data
 async function fetchUserProfile() {
@@ -398,6 +408,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Display server logs from API responses
+function displayServerLogs(data) {
+    if (data.logs) {
+        console.log('=== SERVER LOGS ===');
+        data.logs.forEach(log => {
+            console.log(`[${log.timestamp}] ${log.message}`);
+        });
+        console.log('=== END SERVER LOGS ===');
+    }
+}
+
 // Modal for README display
 function openReadmeModal(repoName, repoDescription) {
     console.log('Modal opened for repo:', repoName);
@@ -480,6 +501,15 @@ function fetchPortfolioReadme() {
     console.log('Fetching portfolio README...');
     const modal = document.createElement('div');
     modal.className = 'readme-modal';
+
+    // Display server logs if available
+    if (repositories && repositories.length > 0 && repositories[0].logs) {
+        console.log('=== SERVER LOGS ===');
+        repositories[0].logs.forEach(log => {
+            console.log(`[${log.timestamp}] ${log.message}`);
+        });
+        console.log('=== END SERVER LOGS ===');
+    }
     
     modal.innerHTML = `
         <div class="readme-modal-content">

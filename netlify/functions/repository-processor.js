@@ -1,6 +1,3 @@
-const path = require('path');
-const fs = require('fs').promises;
-
 /**
  * Repository processor for handling repository data transformations
  */
@@ -107,7 +104,7 @@ class RepositoryProcessor {
       if (markdownMatch && markdownMatch[1]) {
         let imageUrl = markdownMatch[1];
 
-        // Handle relative URLs in markdown
+        // Handle relative URLs in markdown - convert to GitHub raw URLs
         if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/') ||
             imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
           // Convert to GitHub raw URL
@@ -116,6 +113,9 @@ class RepositoryProcessor {
             cleanPath = cleanPath.replace(/^\.\//, '');
           }
           imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+        } else if (!imageUrl.startsWith('http')) {
+          // Handle other relative paths
+          imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${imageUrl}`;
         }
 
         // Skip data URLs
@@ -124,20 +124,12 @@ class RepositoryProcessor {
         }
       }
 
-      // Map GitHub raw URLs to local paths
-      let localScreenshotUrl = null;
-
-      if (screenshotUrl && screenshotUrl.startsWith('https://raw.githubusercontent.com/')) {
-        const urlParts = screenshotUrl.split('/');
-        const filename = urlParts[urlParts.length - 1];
-        localScreenshotUrl = `/images/repos/${repo.name}${path.extname(filename)}`;
-      } else if (screenshotUrl && !screenshotUrl.startsWith('data:')) {
-        localScreenshotUrl = screenshotUrl;
-      }
+      // Use direct GitHub URL instead of local path
+      // This allows runtime updates to work without downloading images
 
       return {
         ...repo,
-        screenshotUrl: localScreenshotUrl,
+        screenshotUrl: screenshotUrl,
         readmeContent: readmeContent
       };
 

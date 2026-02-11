@@ -9,8 +9,8 @@
  * Usage: node build-data.js
  * 
  * Output:
- * - public/data/repos.json - Static repository data
- * - public/images/repos/ - Downloaded screenshot images
+ * - public/data/repos.json - Static repository data with GitHub raw URLs for images
+ * - netlify/functions/embedded-data.js - Embedded data for Netlify functions
  */
 
 // Load environment variables from .env file
@@ -18,7 +18,6 @@ require('dotenv').config();
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 
 // Use node-fetch for compatibility
 let fetch;
@@ -359,12 +358,15 @@ async function extractScreenshotUrlsAndReadmeContent(repositories) {
         if (markdownMatch && markdownMatch[1]) {
           let imageUrl = markdownMatch[1];
           
-          // Handle relative URLs
+          // Handle relative URLs - convert to GitHub raw URLs
           if (imageUrl.startsWith('assets/') || imageUrl.startsWith('./assets/')) {
             const cleanPath = imageUrl.replace(/^\.\//, '');
             imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
+          } else if (imageUrl.startsWith('images/') || imageUrl.startsWith('./images/')) {
+            const cleanPath = imageUrl.replace(/^\.\//, '');
+            imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${cleanPath}`;
           } else if (!imageUrl.startsWith('http')) {
-            // Handle other relative paths (images/, screenshots/, etc.)
+            // Handle other relative paths
             imageUrl = `https://raw.githubusercontent.com/${username}/${repo.name}/main/${imageUrl}`;
           }
           
@@ -374,48 +376,13 @@ async function extractScreenshotUrlsAndReadmeContent(repositories) {
           }
         }
         
-        // Process README content to replace relative image URLs with local paths
-        let processedReadmeContent = readmeContent;
-        
-        if (screenshotUrl && screenshotUrl.startsWith('https://raw.githubusercontent.com/')) {
-          // Extract the filename from the GitHub URL
-          const urlParts = screenshotUrl.split('/');
-          const filename = urlParts[urlParts.length - 1];
-          
-          // Create the local path that will be used after download
-          const localPath = `/images/repos/${repo.name}${path.extname(filename)}`;
-          
-          // Replace all occurrences of the relative image URL in README content
-          // Handle various relative URL formats
-          const relativePaths = [
-            `images/${filename}`,
-            `./images/${filename}`,
-            `assets/${filename}`,
-            `./assets/${filename}`,
-            `images/screen%20shot%20${repo.name}.JPG`, // URL encoded version
-            `images/screen%20shot%20${repo.name}.jpg`
-          ];
-          
-          relativePaths.forEach(relativePath => {
-            processedReadmeContent = processedReadmeContent.replace(
-              new RegExp(`\\]\\(${relativePath}\\)`, 'g'),
-              `](${localPath})`
-            );
-          });
-          
-          // Also handle the original markdown image reference
-          if (markdownMatch) {
-            const originalMarkdown = markdownMatch[0];
-            const relativeUrl = markdownMatch[1];
-            const newMarkdown = originalMarkdown.replace(relativeUrl, localPath);
-            processedReadmeContent = processedReadmeContent.replace(originalMarkdown, newMarkdown);
-          }
-        }
+        // Keep README content as-is - no local path replacement needed
+        // since we're using direct GitHub URLs
         
         return { 
           ...repo, 
           screenshotUrl: screenshotUrl,
-          readmeContent: processedReadmeContent 
+          readmeContent: readmeContent 
         };
         
       } catch (error) {
@@ -435,88 +402,8 @@ async function extractScreenshotUrlsAndReadmeContent(repositories) {
   return results;
 }
 
-// Image processing functions
-async function downloadImage(url, filepath) {
-  return new Promise((resolve, reject) => {
-    // Ensure directory exists
-    const dir = path.dirname(filepath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    const file = fs.createWriteStream(filepath);
-    
-    // Handle HTTPS request with proper cleanup
-    const request = https.get(url, (response) => {
-      if (response.statusCode !== 200) {
-        request.destroy();
-        reject(new Error(`Failed to download image: ${response.statusCode}`));
-        return;
-      }
-
-      response.pipe(file);
-      
-      file.on('finish', () => {
-        file.close(() => {
-          const stats = fs.statSync(filepath);
-          log(`Downloaded image: ${path.basename(filepath)} (${(stats.size / 1024).toFixed(2)} KB)`);
-          resolve(filepath);
-        });
-      });
-    }).on('error', (err) => {
-      request.destroy();
-      fs.unlink(filepath, () => {}); // Delete temp file
-      reject(err);
-    });
-  });
-}
-
-async function downloadAllScreenshots(repositories) {
-  const reposWithScreenshots = repositories.filter(r => r.screenshotUrl);
-  log(`Downloading screenshots for ${reposWithScreenshots.length} repositories...`);
-
-  const results = [];
-  const batchSize = 3; // Conservative for file operations
-
-  for (let i = 0; i < reposWithScreenshots.length; i += batchSize) {
-    const batch = reposWithScreenshots.slice(i, i + batchSize);
-    
-    const batchPromises = batch.map(async (repo) => {
-      try {
-        const extension = path.extname(repo.screenshotUrl) || '.png';
-        const lowercaseExtension = extension.toLowerCase();
-        const filename = `${repo.name}${lowercaseExtension}`;
-        const filepath = path.join(CONFIG.IMAGES_DIR, filename);
-        
-        // Always download fresh copy (overwrite existing)
-        await downloadImage(repo.screenshotUrl, filepath);
-        return { ...repo, localScreenshotPath: `/images/repos/${filename}` };
-      } catch (error) {
-        log(`Failed to download screenshot for ${repo.name}: ${error.message}`, 'error');
-        return { ...repo, localScreenshotPath: null };
-      }
-    });
-
-    const batchResults = await Promise.all(batchPromises);
-    results.push(...batchResults);
-
-    // Add delay between batches
-    if (i + batchSize < reposWithScreenshots.length) {
-      await sleep(500);
-    }
-  }
-
-  // Merge results back with repos that don't have screenshots
-  const allResults = repositories.map(repo => {
-    const downloaded = results.find(r => r.name === repo.name);
-    return downloaded || repo;
-  });
-
-  return allResults;
-}
-
 // Data processing functions
-function cleanRepositoryData(repositories, buildTimestamp) {
+function cleanRepositoryData(repositories) {
   return repositories.map(repo => ({
     id: repo.id,
     name: repo.name,
@@ -529,7 +416,7 @@ function cleanRepositoryData(repositories, buildTimestamp) {
     topics: repo.topics || [],
     languages: repo.languages || {},
     hasReadme: repo.hasReadme || false,
-    screenshotUrl: repo.localScreenshotPath ? `${repo.localScreenshotPath}?v=${buildTimestamp}` : null,
+    screenshotUrl: repo.screenshotUrl || null,
     readmeContent: repo.readmeContent || null,
     // Add computed fields for frontend
     homepageUrl: repo.homepage || ''
@@ -593,13 +480,8 @@ async function build() {
     // Step 6: Extract screenshot URLs and README content
     repositories = await extractScreenshotUrlsAndReadmeContent(repositories);
 
-    // Step 7: Download screenshots
-    repositories = await downloadAllScreenshots(repositories);
-
-    // Step 8: Clean and sort data (updated to include readmeContent)
-    // Use timestamp for cache busting on image URLs
-    const buildTimestamp = Date.now();
-    repositories = cleanRepositoryData(repositories, buildTimestamp);
+    // Step 7: Clean and sort data (updated to include readmeContent)
+    repositories = cleanRepositoryData(repositories);
     repositories = sortRepositories(repositories);
 
     // Step 9: Generate final data file

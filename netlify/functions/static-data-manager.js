@@ -35,6 +35,7 @@ class StaticDataManager {
     console.log('__dirname:', __dirname);
     console.log('dataPath:', dataPath);
     console.log('fullPath:', fullPath);
+    console.log('Attempting to load static data from file system...');
 
     try {
       // Get file stats to check last modified time
@@ -55,11 +56,12 @@ class StaticDataManager {
       console.log('=== LOAD STATIC DATA END ===');
 
       return data;
-    } catch (error) {
-      console.log('No existing static data found, will perform full fetch');
-      console.log('Error details:', error.message);
-      return null;
-    }
+  } catch (error) {
+    console.log('No existing static data found in file system, will attempt to use embedded data...');
+    console.log('Error details:', error.message);
+    console.log('Attempting to use embedded data as fallback...');
+    return null;
+  }
   }
 
   /**
@@ -72,11 +74,13 @@ class StaticDataManager {
     const outputPath = path.join(__dirname, '..', '..', dataPath);
     const outputDir = path.dirname(outputPath);
 
-    console.log('Saving static data...');
+    console.log('=== SAVE STATIC DATA START ===');
+    console.log('Current time:', new Date().toISOString());
     console.log('__dirname:', __dirname);
     console.log('dataPath:', dataPath);
     console.log('outputPath:', outputPath);
     console.log('outputDir:', outputDir);
+    console.log('Attempting to save static data...');
 
     // Ensure directory exists before writing file
     try {
@@ -84,18 +88,19 @@ class StaticDataManager {
       console.log(`Ensured directory exists: ${outputDir}`);
     } catch (error) {
       console.error(`Error creating directory ${outputDir}:`, error.message);
-      // Don't throw - allow graceful degradation in Netlify functions
       console.warn('Note: Running in read-only environment (Netlify functions). Skipping file write.');
+      console.log('=== SAVE STATIC DATA END (FAILED) ===');
       return;
     }
 
     try {
       await fs.writeFile(outputPath, JSON.stringify(data, null, 2));
       console.log(`Static data saved with ${data.repositories.length} repositories`);
+      console.log('=== SAVE STATIC DATA END (SUCCESS) ===');
     } catch (error) {
       console.error(`Error writing to ${outputPath}:`, error.message);
-      // Don't throw - allow graceful degradation in Netlify functions
       console.warn('Note: Running in read-only environment (Netlify functions). Skipping file write.');
+      console.log('=== SAVE STATIC DATA END (FAILED) ===');
     }
   }
 
