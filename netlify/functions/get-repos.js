@@ -5,6 +5,16 @@ const GitHubClient = require('./github-client');
 const RepositoryProcessor = require('./repository-processor');
 const StaticDataManager = require('./static-data-manager');
 
+// Try to load embedded data (generated during build)
+let EMBEDDED_DATA = null;
+try {
+  EMBEDDED_DATA = require('./embedded-data.js');
+  console.log('Embedded data loaded successfully');
+} catch (error) {
+  console.warn('Embedded data not available:', error.message);
+  console.warn('Will fall back to file system reads');
+}
+
 // Fetch cache - will be initialized on first use
 const fetchCache = {};
 
@@ -275,19 +285,34 @@ async function checkForUpdates(githubClient, excludeTopics) {
     let staticData;
     try {
       staticData = await staticDataManager.loadStaticData();
-      console.log('Static data loaded successfully');
+      console.log('Static data loaded successfully from file system');
       console.log('Static data repositories count:', staticData?.repositories?.length || 0);
     } catch (loadError) {
-      console.error('Error loading static data:', loadError.message);
+      console.error('Error loading static data from file system:', loadError.message);
       console.error('Error type:', loadError.constructor.name);
-      staticData = null;
+      console.log('Attempting to use embedded data as fallback...');
+      
+      // Try to use embedded data as fallback
+      if (EMBEDDED_DATA && EMBEDDED_DATA.repositories && EMBEDDED_DATA.repositories.length > 0) {
+        console.log('Using embedded data as fallback');
+        staticData = EMBEDDED_DATA;
+        console.log('Embedded data repositories count:', staticData.repositories.length);
+      } else {
+        console.error('No embedded data available either');
+        staticData = null;
+      }
     }
 
     if (!staticData) {
-      console.log('No existing static data found, will perform full fetch');
+      console.log('No existing static data found (file system or embedded)');
+      console.log('NOTE: Client may still have valid static data loaded');
+      console.log('Returning needsFullFetch: true to trigger client-side full fetch');
       return {
         statusCode: 200,
-        body: JSON.stringify({ needsFullFetch: true })
+        body: JSON.stringify({ 
+          needsFullFetch: true,
+          reason: 'Static data not found on server (file system or embedded)'
+        })
       };
     }
 

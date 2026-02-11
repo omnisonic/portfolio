@@ -568,7 +568,16 @@ function checkForUpdatesOnReload() {
             }
             
             // If no static data exists, perform full fetch
+            // BUT: Only do this if we don't already have valid static data loaded on the client
             if (data.needsFullFetch) {
+                // Check if we already have valid static data loaded
+                if (window.staticData && window.staticData.repositories && window.staticData.repositories.length > 0) {
+                    console.log('Server indicates no static data, but client has valid static data loaded');
+                    console.log('Skipping full fetch - using existing client-side data');
+                    console.log('Reason from server:', data.reason || 'Unknown');
+                    return;
+                }
+                
                 console.log('No static data found, performing full fetch...');
                 fetch('/.netlify/functions/get-repos?mode=full')
                     .then(response => {

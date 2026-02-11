@@ -621,6 +621,27 @@ async function build() {
     log(`Generated static data file: ${outputPath}`);
     log(`Total repositories in final data: ${repositories.length}`);
 
+    // Step 10: Generate embedded data file for Netlify function
+    // This allows the function to access data without file I/O
+    const functionDataPath = path.join(__dirname, 'netlify', 'functions', 'embedded-data.js');
+    const embeddedDataContent = `/**
+ * Embedded Static Data for Netlify Functions
+ * 
+ * This file is auto-generated during the build process.
+ * It contains the static repository data embedded directly in the function code,
+ * eliminating the need for file system reads in the Netlify runtime environment.
+ * 
+ * Generated at: ${new Date().toISOString()}
+ */
+
+const EMBEDDED_DATA = ${JSON.stringify(finalData, null, 2)};
+
+module.exports = EMBEDDED_DATA;
+`;
+    
+    fs.writeFileSync(functionDataPath, embeddedDataContent);
+    log(`Generated embedded data file for functions: ${functionDataPath}`);
+
     // Summary
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     const reposWithScreenshots = repositories.filter(r => r.screenshotUrl).length;
