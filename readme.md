@@ -1,5 +1,8 @@
 # Portfolio Site with GitHub API
 
+![Photo](images/screenshot-2026-02-10-at-9.17.03pm.webp)
+
+
 A modern portfolio website that dynamically displays GitHub repositories and projects using the GitHub API. This site showcases my development work and provides an interactive way to explore my projects.
 
 ![Portfolio Screenshot](assets/screenshots/Screenshot%20Portfolio.JPG)
