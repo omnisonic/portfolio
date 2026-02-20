@@ -156,9 +156,30 @@ async function fetchRepositories() {
         repositories = await response.json();
         console.log('Repositories fetched:', repositories.length, 'repositories');
 
-        // Note: The Netlify function already applies exclude topics filtering
-        // So we don't need to filter again here
-        
+        // Apply exclude topics filtering from static data metadata if available
+        if (window.staticData && window.staticData.metadata && window.staticData.metadata.excludeTopics) {
+            const excludeTopics = window.staticData.metadata.excludeTopics;
+            console.log(`Exclude topics configured: ${excludeTopics.length > 0 ? excludeTopics.join(', ') : '(none)'}`);
+            
+            if (excludeTopics.length > 0) {
+                const beforeFilter = repositories.length;
+                repositories = repositories.filter(repo => {
+                    const repoTopics = (repo.topics || []).map(t => t.toLowerCase());
+                    const hasExcludedTopic = excludeTopics.some(excluded => repoTopics.includes(excluded));
+                    
+                    // Log when a repository is excluded
+                    if (hasExcludedTopic) {
+                        const excludedTopic = excludeTopics.find(excluded => repoTopics.includes(excluded));
+                        console.log(`Excluding repository "${repo.name}" because it contains excluded topic "${excludedTopic}". Repository topics: ${repoTopics.join(', ')}`);
+                    }
+                    
+                    return !hasExcludedTopic;
+                });
+                const afterFilter = repositories.length;
+                console.log(`Applied exclude topics filter from API response: ${beforeFilter - afterFilter} repositories filtered out, ${afterFilter} remaining.`);
+            }
+        }
+
         filteredRepositories = [...repositories];
         console.log('Repositories ready for rendering:', filteredRepositories.length);
         renderRepositories();
@@ -334,7 +355,7 @@ function getLanguageColor(language) {
         'Vue': '#2c3e50',
         'Svelte': '#ff3e00'
     };
-    return colors[language] || '#95a5a6';
+    return colors[language] || '#95a5a5';
 }
 
 // Show loading state

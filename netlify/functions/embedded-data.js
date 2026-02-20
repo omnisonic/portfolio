@@ -5,12 +5,12 @@
  * It contains the static repository data embedded directly in the function code,
  * eliminating the need for file system reads in the Netlify runtime environment.
  * 
- * Generated at: 2026-02-11T21:35:31.947Z
+ * Generated at: 2026-02-20T23:07:37.940Z
  */
 
 const EMBEDDED_DATA = {
   "metadata": {
-    "generatedAt": "2026-02-11T21:35:31.945Z",
+    "generatedAt": "2026-02-20T23:07:37.938Z",
     "username": "omnisonic",
     "userProfile": {
       "login": "omnisonic",
@@ -18,24 +18,24 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic",
       "name": "John",
       "bio": "Python and Web Developer, Tutor",
-      "public_repos": 55,
+      "public_repos": 56,
       "followers": 4,
       "following": 12,
       "created_at": "2018-11-02T04:04:00Z"
     },
-    "totalRepos": 41,
+    "totalRepos": 39,
     "languageStats": {
       "JavaScript": 17,
-      "CSS": 23,
       "HTML": 30,
-      "Python": 20,
+      "CSS": 23,
+      "Python": 19,
       "Shell": 2,
       "Procfile": 2,
       "Vim Script": 1,
       "Less": 1,
-      "SCSS": 2,
+      "SCSS": 1,
       "PHP": 1,
-      "Makefile": 6,
+      "Makefile": 5,
       "Hack": 1,
       "Ruby": 1
     },
@@ -45,25 +45,45 @@ const EMBEDDED_DATA = {
   },
   "repositories": [
     {
+      "id": 1162958916,
+      "name": "banner-maker",
+      "description": "Free Simple Banner Maker",
+      "html_url": "https://github.com/omnisonic/banner-maker",
+      "homepage": null,
+      "created_at": "2026-02-20T22:44:18Z",
+      "updated_at": "2026-02-20T22:49:31Z",
+      "pushed_at": "2026-02-20T22:49:05Z",
+      "topics": [],
+      "languages": {
+        "JavaScript": 20010,
+        "HTML": 2616,
+        "CSS": 1438
+      },
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/banner-maker/main/images/banner_maker.jpeg",
+      "readmeContent": "# Banner Maker\n\n![Banner Maker Screenshot](images/banner_maker.jpeg)\n\nA simple, pure HTML, JavaScript, and CSS banner maker that allows users to create custom banners by uploading images and adding text. Users can download their finished banners directly to their computer.\n\n## Features\n\n- **Image Upload**: Upload your own images to use in your banner\n- **Text Customization**: Add and customize text with various options\n- **Easy to Use**: Simple, intuitive interface\n- **Download Banner**: Save your finished banner as an image file\n- **Pure HTML/CSS/JavaScript**: No frameworks or dependencies required\n\n## How to Use\n\n1. Open `index.html` in your web browser\n2. Upload an image using the upload button\n3. Add text to your banner\n4. Customize the appearance as needed\n5. Click the download button to save your banner\n\n## Technologies Used\n\n- HTML5\n- CSS3\n- JavaScript (ES6+)\n\n## File Structure\n\n```\n├── index.html          # Main HTML file\n├── styles.css          # CSS styles\n├── script.js           # JavaScript functionality\n├── images/\n│   └── banner_maker.jpeg  # Screenshot of the banner maker\n└── readme.md           # This file\n```\n\n## License\n\nMIT License",
+      "homepageUrl": ""
+    },
+    {
       "id": 1151734063,
       "name": "portfolio",
       "description": "A modern portfolio platform engineered with vanilla JavaScript and optimized CSS, featuring dynamic content integration via GitHub API, client-side caching for enhanced performance, and automated deployment through Netlify CI/CD - demonstrating expertise in front-end architecture and API integration.",
       "html_url": "https://github.com/omnisonic/portfolio",
       "homepage": null,
       "created_at": "2026-02-06T20:43:40Z",
-      "updated_at": "2026-02-11T18:54:22Z",
-      "pushed_at": "2026-02-11T18:54:18Z",
+      "updated_at": "2026-02-20T23:02:04Z",
+      "pushed_at": "2026-02-20T23:02:01Z",
       "topics": [
         "feature"
       ],
       "languages": {
-        "JavaScript": 185856,
+        "JavaScript": 167205,
         "CSS": 26639,
         "HTML": 3150
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/portfolio.webp?v=1770845731944",
-      "readmeContent": "# Portfolio Site with GitHub API\n\n![Photo](/images/repos/portfolio.webp)\n\n\nA modern portfolio website that dynamically displays GitHub repositories and projects using the GitHub API. This site showcases my development work and provides an interactive way to explore my projects.\n\n![Portfolio Screenshot](assets/screenshots/Screenshot%20Portfolio.JPG)\n\n\n## Table of Contents\n- [About the Project](#about-the-project)\n- [Getting Started](#getting-started)\n- [Prerequisites](#prerequisites)\n- [Installation](#installation)\n- [Configuration](#configuration)\n- [Project Structure](#project-structure)\n- [Technologies Used](#technologies-used)\n- [Features](#features)\n- [API Reference](#api-reference)\n- [Development](#development)\n- [Deployment](#deployment)\n- [License](#license)\n\n## About the Project\n\nThis portfolio website is designed to showcase my development projects and GitHub repositories in a clean, modern interface. The site dynamically fetches data from the GitHub API to display up-to-date information about my repositories, including names, descriptions, programming languages, and star counts.\n\n\nThe website is built with modern web technologies and follows responsive design principles to ensure optimal viewing experience across all devices, from desktop computers to mobile phones.\n\n## Getting Started\n\nTo run this project locally, follow these steps:\n\n1. Clone the repository\n2. Install dependencies\n3. Configure the GitHub API\n4. Start the development server\n\n## Prerequisites\n\nBefore you begin, ensure you have the following installed on your system:\n\n- **Node.js** (v14.0.0 or higher)\n- **npm** (v6.0.0 or higher)\n- **Git** (for cloning the repository)\n- **A GitHub account** (for API access)\n\n## Installation\n\n1. **Clone the repository:**\n   ```bash\n   git clone https://github.com/your-username/your-repository.git\n   cd your-repository\n   ```\n\n2. **Open the project:**\n   ```bash\n   open index.html\n   ```\n\n## Configuration\n\n### GitHub API Setup\n\n1. **Update GitHub username:**\n   Open `script.js` and replace `'username'` with your actual GitHub username:\n   ```javascript\n   const GITHUB_USERNAME = 'username'; // Replace with your GitHub username\n   const USE_PUBLIC_API = true; // Set to true to use public API (60 requests/hour)\n   ```\n\n2. **Netlify Functions:**\n   - For production deployment on Netlify, use serverless functions\n   - Create a Netlify function to handle GitHub API calls securely\n   - Add your GitHub token to Netlify environment variables\n   - No client-side token exposure\n\n3. **Local Development:**\n   - For local development, you can still use environment variables\n   - Add your GitHub token to your `.zshenv` file:\n     ```bash\n     export GITHUB_TOKEN=your_token_here\n     ```\n   - Reload your shell: `source ~/.zshenv`\n\n## Project Structure\n\n```\nportfolio-site/\n├── src/\n│   ├── components/     # React components\n│   ├── styles/        # CSS stylesheets\n│   ├── utils/         # Utility functions\n│   └── api/           # API integration code\n├── public/            # Static assets\n├── tests/             # Test files\n├── .env.example       # Environment variables template\n├── package.json       # Dependencies and scripts\n└── README.md          # This file\n```\n\n## Technologies Used\n\n- **HTML5**: Semantic markup for content structure\n- **CSS3**: Modern styling with Flexbox and Grid layouts\n- **JavaScript (ES6+)**: Modern JavaScript features for better code organization\n- **GitHub API**: RESTful API for fetching repository data\n- **Git**: Version control system\n\n## Features\n\n- **Dynamic Repository Display**: Automatically fetches and displays GitHub repositories\n- **Responsive Design**: Optimized for desktop, tablet, and mobile devices\n- **Modern UI**: Clean, minimalist design with smooth animations\n- **Search Functionality**: Filter repositories by name or description\n- **Language Detection**: Shows programming languages used in each repository\n- **Star Count Display**: Shows repository popularity with star counts\n- **Build-time Data with Runtime Updates**: Static data generated at build time, with runtime timestamp checking for efficient updates\n- **Repository Screenshots**: Automatic screenshot matching during runtime updates with flexible naming patterns\n- **SEO Optimized**: Semantic HTML and meta tags for better search engine visibility\n- **Fast Loading**: Optimized assets and lazy loading for better performance\n- **Build-time Processing**: Screenshot matching happens at deployment, not runtime\n\n## API Reference\n\n### GitHub API Endpoints Used\n\n- **GET** `/users/{username}/repos` - Fetch user repositories\n- **GET** `/repos/{owner}/{repo}` - Get repository details\n- **GET** `/repos/{owner}/{repo}/languages` - Get repository languages\n\n### Rate Limiting\n\n- **Unauthenticated requests**: 60 requests per hour\n- **Authenticated requests**: 5,000 requests per hour\n\n## Development\n\n- **Build-time Data Generation**: Static data is generated at build time using GitHub API\n- **Runtime Timestamp Checking**: On page reload, the application checks if any repositories have been updated by comparing timestamps\n- **Efficient Updates**: Only repositories that have changed since the last build are updated at runtime\n- **Repository Screenshots**: Screenshots are extracted from README content during runtime updates for optimal performance\n\n\n### Local Development\n\n1. **Open the project:**\n   ```bash\n   open index.html\n   ```\n\n2. **View your portfolio:**\n   The site will display your GitHub repositories using static data generated at build time. On page reload, the application checks for updates by comparing repository timestamps and updates only the repositories that have changed.\n\n\n### Netlify Development\n\n1. **Install Netlify CLI:**\n   ```bash\n   npm install -g netlify-cli\n   ```\n\n2. **Login to Netlify:**\n   ```bash\n   netlify login\n   ```\n\n3. **Link to Netlify site:**\n   ```bash\n   netlify link\n   ```\n\n4. **Start development server:**\n   ```bash\n   netlify dev\n   ```\n\n5. **View your portfolio:**\n   The site will automatically fetch and display your GitHub repositories using authenticated API (5,000 requests/hour)\n\n### Code Style\n\nThis project follows standard JavaScript conventions with ESLint and Prettier for code consistency.\n\n### Contributing\n\n1. Fork the repository\n2. Create a feature branch\n3. Make your changes\n4. Add tests if applicable\n5. Submit a pull request\n\n## Deployment\n\n### Netlify Deployment\n\n1. **Connect to Netlify:**\n   - Log in to Netlify\n   - Click \"New site from Git\"\n   - Select your repository\n\n2. **Configure Build Settings:**\n   - Build command: `npm run build`\n   - Publish directory: `build/`\n\n3. **Environment Variables:**\n   - Add GitHub token in Netlify UI\n   - Save and deploy\n\n4. **Custom Domain (Optional):**\n   - Add your custom domain\n   - Configure DNS settings\n\n## License\n\nThis project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.\n\n## Support\n\nFor support or questions about this project, please:\n\n- Open an issue in the repository\n- Contact me directly via email\n\n---\n\n**Last Updated:** February 2026",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/portfolio/main/images/screenshot-2026-02-10-at-9.17.03pm.webp",
+      "readmeContent": "# Portfolio Site with GitHub API\n\n![Photo](images/screenshot-2026-02-10-at-9.17.03pm.webp)\n\n\nA modern portfolio website that dynamically displays GitHub repositories and projects using the GitHub API. This site showcases my development work and provides an interactive way to explore my projects.\n\n![Portfolio Screenshot](assets/screenshots/Screenshot%20Portfolio.JPG)\n\n\n## Table of Contents\n- [About the Project](#about-the-project)\n- [Getting Started](#getting-started)\n- [Prerequisites](#prerequisites)\n- [Installation](#installation)\n- [Configuration](#configuration)\n- [Project Structure](#project-structure)\n- [Technologies Used](#technologies-used)\n- [Features](#features)\n- [API Reference](#api-reference)\n- [Development](#development)\n- [Deployment](#deployment)\n- [License](#license)\n\n## About the Project\n\nThis portfolio website is designed to showcase my development projects and GitHub repositories in a clean, modern interface. The site dynamically fetches data from the GitHub API to display up-to-date information about my repositories, including names, descriptions, programming languages, and star counts.\n\n\nThe website is built with modern web technologies and follows responsive design principles to ensure optimal viewing experience across all devices, from desktop computers to mobile phones.\n\n## Getting Started\n\nTo run this project locally, follow these steps:\n\n1. Clone the repository\n2. Install dependencies\n3. Configure the GitHub API\n4. Start the development server\n\n## Prerequisites\n\nBefore you begin, ensure you have the following installed on your system:\n\n- **Node.js** (v14.0.0 or higher)\n- **npm** (v6.0.0 or higher)\n- **Git** (for cloning the repository)\n- **A GitHub account** (for API access)\n\n## Installation\n\n1. **Clone the repository:**\n   ```bash\n   git clone https://github.com/your-username/your-repository.git\n   cd your-repository\n   ```\n\n2. **Open the project:**\n   ```bash\n   open index.html\n   ```\n\n## Configuration\n\n### GitHub API Setup\n\n1. **Update GitHub username:**\n   Open `script.js` and replace `'username'` with your actual GitHub username:\n   ```javascript\n   const GITHUB_USERNAME = 'username'; // Replace with your GitHub username\n   const USE_PUBLIC_API = true; // Set to true to use public API (60 requests/hour)\n   ```\n\n2. **Netlify Functions:**\n   - For production deployment on Netlify, use serverless functions\n   - Create a Netlify function to handle GitHub API calls securely\n   - Add your GitHub token to Netlify environment variables\n   - No client-side token exposure\n\n3. **Local Development:**\n   - For local development, you can still use environment variables\n   - Add your GitHub token to your `.zshenv` file:\n     ```bash\n     export GITHUB_TOKEN=your_token_here\n     ```\n   - Reload your shell: `source ~/.zshenv`\n\n## Project Structure\n\n```\nportfolio-site/\n├── src/\n│   ├── components/     # React components\n│   ├── styles/        # CSS stylesheets\n│   ├── utils/         # Utility functions\n│   └── api/           # API integration code\n├── public/            # Static assets\n├── tests/             # Test files\n├── .env.example       # Environment variables template\n├── package.json       # Dependencies and scripts\n└── README.md          # This file\n```\n\n## Technologies Used\n\n- **HTML5**: Semantic markup for content structure\n- **CSS3**: Modern styling with Flexbox and Grid layouts\n- **JavaScript (ES6+)**: Modern JavaScript features for better code organization\n- **GitHub API**: RESTful API for fetching repository data\n- **Git**: Version control system\n\n## Features\n\n- **Dynamic Repository Display**: Automatically fetches and displays GitHub repositories\n- **Responsive Design**: Optimized for desktop, tablet, and mobile devices\n- **Modern UI**: Clean, minimalist design with smooth animations\n- **Search Functionality**: Filter repositories by name or description\n- **Language Detection**: Shows programming languages used in each repository\n- **Star Count Display**: Shows repository popularity with star counts\n- **Build-time Data with Runtime Updates**: Static data generated at build time, with runtime timestamp checking for efficient updates\n- **Repository Screenshots**: Automatic screenshot matching during runtime updates with flexible naming patterns\n- **SEO Optimized**: Semantic HTML and meta tags for better search engine visibility\n- **Fast Loading**: Optimized assets and lazy loading for better performance\n- **Build-time Processing**: Screenshot matching happens at deployment, not runtime\n\n## API Reference\n\n### GitHub API Endpoints Used\n\n- **GET** `/users/{username}/repos` - Fetch user repositories\n- **GET** `/repos/{owner}/{repo}` - Get repository details\n- **GET** `/repos/{owner}/{repo}/languages` - Get repository languages\n\n### Rate Limiting\n\n- **Unauthenticated requests**: 60 requests per hour\n- **Authenticated requests**: 5,000 requests per hour\n\n## Development\n\n- **Build-time Data Generation**: Static data is generated at build time using GitHub API\n- **Runtime Timestamp Checking**: On page reload, the application checks if any repositories have been updated by comparing timestamps\n- **Efficient Updates**: Only repositories that have changed since the last build are updated at runtime\n- **Repository Screenshots**: Screenshots are extracted from README content during runtime updates for optimal performance\n\n### Important: Embedded Data in Netlify Functions\n\n**The Challenge:** Netlify's serverless functions run in a read-only environment where the file system structure at runtime differs from the build environment. The `public/data/repos.json` file generated during build is not accessible to functions at runtime.\n\n**The Solution:** Use **embedded data** - the build process (`build-data.js`) generates `netlify/functions/embedded-data.js` which contains the static repository data as a JavaScript module. This file is bundled with the function code and is always available at runtime.\n\n**Implementation Details:**\n```javascript\n// At the top of get-repos.js, embedded data is loaded at module initialization\nlet EMBEDDED_DATA = null;\ntry {\n  EMBEDDED_DATA = require('./embedded-data.js');\n} catch (error) {\n  console.warn('Embedded data not available:', error.message);\n}\n\n// In check mode, use embedded data directly (not file system)\nlet staticData = EMBEDDED_DATA;\n```\n\n**Key Insight:** Without embedded data, the `check` mode cannot compare current GitHub data against the last known state, forcing a full fetch every time. Embedded data enables efficient differential updates by providing the baseline for comparison.\n\n\n### Local Development\n\n1. **Open the project:**\n   ```bash\n   open index.html\n   ```\n\n2. **View your portfolio:**\n   The site will display your GitHub repositories using static data generated at build time. On page reload, the application checks for updates by comparing repository timestamps and updates only the repositories that have changed.\n\n\n### Netlify Development\n\n1. **Install Netlify CLI:**\n   ```bash\n   npm install -g netlify-cli\n   ```\n\n2. **Login to Netlify:**\n   ```bash\n   netlify login\n   ```\n\n3. **Link to Netlify site:**\n   ```bash\n   netlify link\n   ```\n\n4. **Start development server:**\n   ```bash\n   netlify dev\n   ```\n\n5. **View your portfolio:**\n   The site will automatically fetch and display your GitHub repositories using authenticated API (5,000 requests/hour)\n\n### Code Style\n\nThis project follows standard JavaScript conventions with ESLint and Prettier for code consistency.\n\n### Contributing\n\n1. Fork the repository\n2. Create a feature branch\n3. Make your changes\n4. Add tests if applicable\n5. Submit a pull request\n\n## Deployment\n\n### Netlify Deployment\n\n1. **Connect to Netlify:**\n   - Log in to Netlify\n   - Click \"New site from Git\"\n   - Select your repository\n\n2. **Configure Build Settings:**\n   - Build command: `npm run build`\n   - Publish directory: `build/`\n\n3. **Environment Variables:**\n   - Add GitHub token in Netlify UI\n   - Save and deploy\n\n4. **Custom Domain (Optional):**\n   - Add your custom domain\n   - Configure DNS settings\n\n## License\n\nThis project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.\n\n## Support\n\nFor support or questions about this project, please:\n\n- Open an issue in the repository\n- Contact me directly via email\n\n---\n\n**Last Updated:** February 2026",
       "homepageUrl": ""
     },
     {
@@ -73,15 +93,15 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/portfolio-chatbot",
       "homepage": "https://portfolio-rudy-chat.streamlit.app/",
       "created_at": "2026-01-06T08:22:47Z",
-      "updated_at": "2026-02-08T19:02:37Z",
-      "pushed_at": "2026-02-08T19:02:34Z",
+      "updated_at": "2026-02-11T23:18:21Z",
+      "pushed_at": "2026-02-11T23:18:17Z",
       "topics": [],
       "languages": {
         "Python": 10807
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/portfolio-chatbot.jpg?v=1770845731944",
-      "readmeContent": "# Portfolio Chatbot - Standalone Streamlit App\n\n\nA standalone Streamlit chatbot that answers questions about a creative professional's portfolio using OpenAI API via OpenRouter.\n\n![Portfolio Screenshot](/images/repos/portfolio-chatbot.JPG)\n\n## Features\n\n- Chat interface with portfolio-specific Q&A\n- Custom assistant avatar display\n- Multiple LLM engine selection\n- Portfolio context integration\n- Image display support in responses\n\n## Setup\n\n### 1. Install Dependencies\n\n```bash\npip install -r requirements.txt\n```\n\n### 2. Configure Secrets\n\nCreate a `.streamlit/secrets.toml` file or configure these secrets in Streamlit Cloud:\n\n```toml\nOPENROUTER_API_KEY = \"your-openrouter-api-key-here\"\n# Optional:\nOPENROUTER_BASE_URL = \"https://openrouter.ai/api/v1\"\nMODEL_NAME = \"xiaomi/mimo-v2-flash:free\"\n```\n\n### 3. Run Locally\n\n```bash\nstreamlit run main.py\n```\n\n## Deployment to Streamlit Cloud\n\n1. **Push to GitHub**: Upload this entire folder to a GitHub repository\n2. **Connect to Streamlit Cloud**: \n   - Go to [share.streamlit.io](https://share.streamlit.io)\n   - Connect your GitHub account\n   - Select your repository and this folder\n3. **Configure Secrets**: Add the required secrets in the Streamlit Cloud dashboard\n4. **Deploy**: Click \"Deploy\" and wait for the app to build\n\n## File Structure\n\n```\nportfolio-chatbot/\n├── main.py                 # Main Streamlit application\n├── requirements.txt        # Python dependencies\n├── scraped_data.json       # Portfolio data\n├── images/\n│   └── rudy_avatar_sm.jpg  # Assistant avatar\n└── README.md              # This file\n```\n\n## Required Secrets\n\n- `OPENROUTER_API_KEY`: Your OpenRouter API key\n- `OPENROUTER_BASE_URL` (optional): API base URL (defaults to OpenRouter)\n- `MODEL_NAME` (optional): Model selection (defaults to xiaomi/mimo-v2-flash:free)\n\n## Usage\n\n1. Start a conversation by typing in the chat input\n2. Ask questions about the portfolio work\n3. The bot will respond using the portfolio context\n4. Images mentioned in responses will be displayed automatically\n\n## Notes\n\n- The app uses Streamlit's built-in chat interface for user messages\n- Assistant messages display with a custom avatar (300px width)\n- Portfolio data is loaded from `scraped_data.json`\n- The app supports multiple LLM engines via the sidebar selection\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/portfolio-chatbot/main/images/screenshot-2026-02-07-at-9.26.58am.webp",
+      "readmeContent": "# Portfolio Chatbot - Standalone Streamlit App\n\n![Photo](images/screenshot-2026-02-07-at-9.26.58am.webp)\n\n\n\nA standalone Streamlit chatbot that answers questions about a creative professional's portfolio using OpenAI API via OpenRouter.\n\n![Portfolio Screenshot](images/screen%20shot%20portfolio-chatbot.JPG)\n\n## Features\n\n- Chat interface with portfolio-specific Q&A\n- Custom assistant avatar display\n- Multiple LLM engine selection\n- Portfolio context integration\n- Image display support in responses\n\n## Setup\n\n### 1. Install Dependencies\n\n```bash\npip install -r requirements.txt\n```\n\n### 2. Configure Secrets\n\nCreate a `.streamlit/secrets.toml` file or configure these secrets in Streamlit Cloud:\n\n```toml\nOPENROUTER_API_KEY = \"your-openrouter-api-key-here\"\n# Optional:\nOPENROUTER_BASE_URL = \"https://openrouter.ai/api/v1\"\nMODEL_NAME = \"xiaomi/mimo-v2-flash:free\"\n```\n\n### 3. Run Locally\n\n```bash\nstreamlit run main.py\n```\n\n## Deployment to Streamlit Cloud\n\n1. **Push to GitHub**: Upload this entire folder to a GitHub repository\n2. **Connect to Streamlit Cloud**: \n   - Go to [share.streamlit.io](https://share.streamlit.io)\n   - Connect your GitHub account\n   - Select your repository and this folder\n3. **Configure Secrets**: Add the required secrets in the Streamlit Cloud dashboard\n4. **Deploy**: Click \"Deploy\" and wait for the app to build\n\n## File Structure\n\n```\nportfolio-chatbot/\n├── main.py                 # Main Streamlit application\n├── requirements.txt        # Python dependencies\n├── scraped_data.json       # Portfolio data\n├── images/\n│   └── rudy_avatar_sm.jpg  # Assistant avatar\n└── README.md              # This file\n```\n\n## Required Secrets\n\n- `OPENROUTER_API_KEY`: Your OpenRouter API key\n- `OPENROUTER_BASE_URL` (optional): API base URL (defaults to OpenRouter)\n- `MODEL_NAME` (optional): Model selection (defaults to xiaomi/mimo-v2-flash:free)\n\n## Usage\n\n1. Start a conversation by typing in the chat input\n2. Ask questions about the portfolio work\n3. The bot will respond using the portfolio context\n4. Images mentioned in responses will be displayed automatically\n\n## Notes\n\n- The app uses Streamlit's built-in chat interface for user messages\n- Assistant messages display with a custom avatar (300px width)\n- Portfolio data is loaded from `scraped_data.json`\n- The app supports multiple LLM engines via the sidebar selection\n",
       "homepageUrl": "https://portfolio-rudy-chat.streamlit.app/"
     },
     {
@@ -100,8 +120,8 @@ const EMBEDDED_DATA = {
         "CSS": 1112
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/chords-and-scale-charts.webp?v=1770845731944",
-      "readmeContent": "# Repository\n\n![Photo](/images/repos/chords-and-scale-charts.webp)\n\n\n![Photo](images/screenshot-2026-02-08-at-10.31.26am.jpg)\n\n\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/chords-and-scale-charts/main/images/screenshot-2026-02-08-at-10.31.26am.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-08-at-10.31.26am.webp)\n\n\n![Photo](images/screenshot-2026-02-08-at-10.31.26am.jpg)\n\n\n",
       "homepageUrl": "https://omnisonic.github.io/chords-and-scale-charts/"
     },
     {
@@ -111,17 +131,17 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/abcjs-key-signature-trainer",
       "homepage": "https://solfege-trainer.johnclarkemusic.com/",
       "created_at": "2025-12-17T20:37:40Z",
-      "updated_at": "2026-02-07T03:53:29Z",
-      "pushed_at": "2026-02-05T07:16:21Z",
+      "updated_at": "2026-02-11T23:01:39Z",
+      "pushed_at": "2026-02-11T23:01:35Z",
       "topics": [],
       "languages": {
         "JavaScript": 30362,
         "CSS": 12600,
         "HTML": 8060
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/abcjs-key-signature-trainer/main/images/screenshot-2026-02-07-at-8.13.37am.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-07-at-8.13.37am.webp)\n\n\n",
       "homepageUrl": "https://solfege-trainer.johnclarkemusic.com/"
     },
     {
@@ -131,17 +151,17 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/snake_game",
       "homepage": "https://omnisonic.github.io/snake_game/",
       "created_at": "2025-08-12T23:01:12Z",
-      "updated_at": "2026-02-07T17:32:43Z",
-      "pushed_at": "2025-08-12T23:08:06Z",
+      "updated_at": "2026-02-11T23:23:56Z",
+      "pushed_at": "2026-02-11T23:23:53Z",
       "topics": [],
       "languages": {
         "JavaScript": 4217,
         "HTML": 401,
         "CSS": 199
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/snake_game/main/images/screenshot-snake-game.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-snake-game.webp)\n\n\n",
       "homepageUrl": "https://omnisonic.github.io/snake_game/"
     },
     {
@@ -151,8 +171,8 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/static-photomap",
       "homepage": "https://photo-map.jctech.work/",
       "created_at": "2025-07-13T15:32:22Z",
-      "updated_at": "2026-02-10T18:47:30Z",
-      "pushed_at": "2026-02-10T18:47:26Z",
+      "updated_at": "2026-02-11T22:33:33Z",
+      "pushed_at": "2026-02-11T22:33:29Z",
       "topics": [],
       "languages": {
         "JavaScript": 1026914,
@@ -162,8 +182,8 @@ const EMBEDDED_DATA = {
         "HTML": 3184
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "# GPS Photo Map Viewer (Static Edition)\n\nCombining Leaflet.js mapping with your geo-tagged photos in a lightweight static web app. Deployable via Netlify or AWS S3.\n\n## Features\n\n- 🗺️ Interactive map with photo markers (Leaflet.js)\n- 📸 Photo gallery with EXIF GPS coordinate display\n- 📁 Album selection from dropdown\n- 📱 Responsive sidebar layout\n- 🔒 Optional password protection (Netlify only)\n- ⚡ Fast static deployment (no server required)\n- 🌐 Multiple deployment options (Netlify + AWS S3)\n## Albums Included\n\n- **test**: 1 photo with GPS data\n- **july_9_trail_run_unintas**: 33 photos with GPS data\n\n## How to Use\n\n1. Open `index.html` in a web browser\n2. Select an album from the dropdown menu\n3. View photos on the map by clicking the red camera markers\n4. Browse the photo gallery in the main area\n5. Click on any photo to view it in full size\n\n## Environment Variables Setup\n\nThis project uses different AWS credential variable names for local development versus Netlify deploys to work around Netlify's reserved variable limitations.\n\n### Local Development\n\nUse standard AWS variable names in your shell environment or project `.env` file:\n\n**Option 1: Using .zshenv (recommended for system-wide credentials)**\n```bash\n# Add to ~/.zshenv\nexport AWS_ACCESS_KEY_ID=your_aws_access_key_here\nexport AWS_SECRET_ACCESS_KEY=your_aws_secret_key_here\nexport S3_REGION=your_aws_region\nexport S3_BUCKET=your_s3_bucket_name\n```\n\n**Option 2: Using project .env file**\n```bash\n# .env (at project root)\nAWS_ACCESS_KEY_ID=your_aws_access_key_here\nAWS_SECRET_ACCESS_KEY=your_aws_secret_key_here\nS3_REGION=your_aws_region\nS3_BUCKET=your_s3_bucket_name\n```\n\n### Netlify Deployment\n\nSince Netlify reserves standard AWS variable names, set custom variable names in the Netlify UI:\n\n1. Go to your Netlify site dashboard\n2. Navigate to Site settings > Environment variables\n3. Add these variables:\n   - `MY_AWS_ACCESS_KEY_ID` = your AWS access key\n   - `MY_AWS_SECRET_ACCESS_KEY` = your AWS secret key\n   - `MY_S3_REGION` = your_aws_region\n   - `MY_S3_BUCKET` = your_s3_bucket_name\n\nThe application code automatically detects the environment and uses the appropriate variable names:\n- Local: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`\n- Netlify: `MY_AWS_ACCESS_KEY_ID`, `MY_AWS_SECRET_ACCESS_KEY`\n\n### Alternative: Using Netlify CLI\n\nYou can also set environment variables using the Netlify CLI:\n\n```bash\n# Set variables for production\nnetlify env:set MY_AWS_ACCESS_KEY_ID your_access_key_here\nnetlify env:set MY_AWS_SECRET_ACCESS_KEY your_secret_key_here\n\n# Set variables for specific deploy contexts\nnetlify env:set MY_AWS_ACCESS_KEY_ID your_access_key_here --context production\nnetlify env:set MY_AWS_ACCESS_KEY_ID your_preview_key_here --context deploy-preview\n```\n\n## File Structure\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/static-photomap/main/images/screenshot-2026-02-07-at-10.49.17am.webp",
+      "readmeContent": "# GPS Photo Map Viewer (Static Edition)\n\n![Photo](images/screenshot-2026-02-07-at-10.49.17am.webp)\n\n\nCombining Leaflet.js mapping with your geo-tagged photos in a lightweight static web app. Deployable via Netlify or AWS S3.\n\n## Features\n\n- 🗺️ Interactive map with photo markers (Leaflet.js)\n- 📸 Photo gallery with EXIF GPS coordinate display\n- 📁 Album selection from dropdown\n- 📱 Responsive sidebar layout\n- 🔒 Optional password protection (Netlify only)\n- ⚡ Fast static deployment (no server required)\n- 🌐 Multiple deployment options (Netlify + AWS S3)\n## Albums Included\n\n- **test**: 1 photo with GPS data\n- **july_9_trail_run_unintas**: 33 photos with GPS data\n\n## How to Use\n\n1. Open `index.html` in a web browser\n2. Select an album from the dropdown menu\n3. View photos on the map by clicking the red camera markers\n4. Browse the photo gallery in the main area\n5. Click on any photo to view it in full size\n\n## Environment Variables Setup\n\nThis project uses different AWS credential variable names for local development versus Netlify deploys to work around Netlify's reserved variable limitations.\n\n### Local Development\n\nUse standard AWS variable names in your shell environment or project `.env` file:\n\n**Option 1: Using .zshenv (recommended for system-wide credentials)**\n```bash\n# Add to ~/.zshenv\nexport AWS_ACCESS_KEY_ID=your_aws_access_key_here\nexport AWS_SECRET_ACCESS_KEY=your_aws_secret_key_here\nexport S3_REGION=your_aws_region\nexport S3_BUCKET=your_s3_bucket_name\n```\n\n**Option 2: Using project .env file**\n```bash\n# .env (at project root)\nAWS_ACCESS_KEY_ID=your_aws_access_key_here\nAWS_SECRET_ACCESS_KEY=your_aws_secret_key_here\nS3_REGION=your_aws_region\nS3_BUCKET=your_s3_bucket_name\n```\n\n### Netlify Deployment\n\nSince Netlify reserves standard AWS variable names, set custom variable names in the Netlify UI:\n\n1. Go to your Netlify site dashboard\n2. Navigate to Site settings > Environment variables\n3. Add these variables:\n   - `MY_AWS_ACCESS_KEY_ID` = your AWS access key\n   - `MY_AWS_SECRET_ACCESS_KEY` = your AWS secret key\n   - `MY_S3_REGION` = your_aws_region\n   - `MY_S3_BUCKET` = your_s3_bucket_name\n\nThe application code automatically detects the environment and uses the appropriate variable names:\n- Local: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`\n- Netlify: `MY_AWS_ACCESS_KEY_ID`, `MY_AWS_SECRET_ACCESS_KEY`\n\n### Alternative: Using Netlify CLI\n\nYou can also set environment variables using the Netlify CLI:\n\n```bash\n# Set variables for production\nnetlify env:set MY_AWS_ACCESS_KEY_ID your_access_key_here\nnetlify env:set MY_AWS_SECRET_ACCESS_KEY your_secret_key_here\n\n# Set variables for specific deploy contexts\nnetlify env:set MY_AWS_ACCESS_KEY_ID your_access_key_here --context production\nnetlify env:set MY_AWS_ACCESS_KEY_ID your_preview_key_here --context deploy-preview\n```\n\n## File Structure\n",
       "homepageUrl": "https://photo-map.jctech.work/"
     },
     {
@@ -173,8 +193,8 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/flask_ai_cheatsheet",
       "homepage": "https://ai-cheatsheet.jctech.work/",
       "created_at": "2025-06-27T15:22:38Z",
-      "updated_at": "2026-02-10T22:39:28Z",
-      "pushed_at": "2025-06-28T02:02:22Z",
+      "updated_at": "2026-02-12T06:05:37Z",
+      "pushed_at": "2026-02-12T06:05:33Z",
       "topics": [],
       "languages": {
         "CSS": 3474,
@@ -183,8 +203,8 @@ const EMBEDDED_DATA = {
         "HTML": 1273
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "# Flask AI Cheatsheet\n\nThis project is a Flask-based web application that replicates the core functionality of the original Django ai-cheatsheet project. It allows users to generate cheat sheets for various subjects using the OpenAI API via OpenRouter.\n\n## Requirements\n\n### Python Packages\n- flask\n- openai\n- python-dotenv\n\n### Environment Variables\n- `OPENROUTER_API_KEY`: Your OpenRouter API key for OpenAI access.\n\n### Project Structure\n- `app.py`: Main Flask application.\n- `templates/cheatsheet.html`: HTML template for the UI.\n- `static/cheatsheet_generator/js/script.js`: JavaScript for frontend interactivity.\n- `.env`: Environment variables (not committed to version control).\n- `requirements.txt`: Python dependencies.\n\n### Features\n- Web form to submit a subject for cheat sheet generation.\n- Calls OpenAI API via OpenRouter to generate cheat sheet content.\n- Returns results as JSON and displays them dynamically on the page.\n- Error handling for API and user input issues.\n\n### Deployment\n- Can be run locally with Flask's development server.\n- Ready for deployment with Gunicorn, Zappa, or any WSGI-compatible server.\n\n---\n\n**Next Steps:**\n1. Implement `app.py` with Flask routes and logic.\n2. Add template and static files.\n3. Set up `.env` and `requirements.txt`.\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/flask_ai_cheatsheet/main/images/screenshot-2026-02-10-at-2.41.28pm.webp",
+      "readmeContent": "# Flask AI Cheatsheet\n\n![Photo](images/screenshot-2026-02-10-at-2.41.28pm.webp)\n\n\nThis project is a Flask-based web application that replicates the core functionality of the original Django ai-cheatsheet project. It allows users to generate cheat sheets for various subjects using the OpenAI API via OpenRouter.\n\n## Requirements\n\n### Python Packages\n- flask\n- openai\n- python-dotenv\n\n### Environment Variables\n- `OPENROUTER_API_KEY`: Your OpenRouter API key for OpenAI access.\n\n### Project Structure\n- `app.py`: Main Flask application.\n- `templates/cheatsheet.html`: HTML template for the UI.\n- `static/cheatsheet_generator/js/script.js`: JavaScript for frontend interactivity.\n- `.env`: Environment variables (not committed to version control).\n- `requirements.txt`: Python dependencies.\n\n### Features\n- Web form to submit a subject for cheat sheet generation.\n- Calls OpenAI API via OpenRouter to generate cheat sheet content.\n- Returns results as JSON and displays them dynamically on the page.\n- Error handling for API and user input issues.\n\n### Deployment\n- Can be run locally with Flask's development server.\n- Ready for deployment with Gunicorn, Zappa, or any WSGI-compatible server.\n\n---\n\n**Next Steps:**\n1. Implement `app.py` with Flask routes and logic.\n2. Add template and static files.\n3. Set up `.env` and `requirements.txt`.\n",
       "homepageUrl": "https://ai-cheatsheet.jctech.work/"
     },
     {
@@ -194,17 +214,17 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/code-a-cake",
       "homepage": "https://omnisonic.github.io/code-a-cake/",
       "created_at": "2025-06-11T04:34:32Z",
-      "updated_at": "2026-02-07T03:54:06Z",
-      "pushed_at": "2025-06-24T22:20:36Z",
+      "updated_at": "2026-02-11T23:20:21Z",
+      "pushed_at": "2026-02-11T23:20:17Z",
       "topics": [],
       "languages": {
         "JavaScript": 16394,
         "CSS": 9183,
         "HTML": 4084
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/code-a-cake/main/images/screenshot-2026-02-07-at-8.19.09am.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-07-at-8.19.09am.webp)\n\n\n",
       "homepageUrl": "https://omnisonic.github.io/code-a-cake/"
     },
     {
@@ -234,17 +254,17 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/lyriset_static",
       "homepage": "https://lyriset.com",
       "created_at": "2025-02-05T17:52:56Z",
-      "updated_at": "2026-02-07T19:08:12Z",
-      "pushed_at": "2026-01-10T19:41:40Z",
+      "updated_at": "2026-02-12T05:55:55Z",
+      "pushed_at": "2026-02-12T05:55:51Z",
       "topics": [],
       "languages": {
         "JavaScript": 165192,
         "HTML": 41816,
         "CSS": 35986
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/lyriset_static/main/images/screenshot-2026-02-10-at-2.58.35pm.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-10-at-2.58.35pm.webp)\n\n\n",
       "homepageUrl": "https://lyriset.com"
     },
     {
@@ -254,15 +274,15 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/streamlit_remove_background",
       "homepage": "https://remove-background-jctech.streamlit.app/",
       "created_at": "2024-09-02T23:12:52Z",
-      "updated_at": "2026-02-07T19:10:14Z",
-      "pushed_at": "2024-09-02T23:23:41Z",
+      "updated_at": "2026-02-12T06:12:43Z",
+      "pushed_at": "2026-02-12T06:12:39Z",
       "topics": [],
       "languages": {
         "Python": 1653
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "# This is a simple back ground remover for my students.  This is useful for makeing sprites you might need when making computer games.\n1 - upload a n image perferaly with white background.\n2 - This app will remove the backgound and return an the image as a png file.\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/streamlit_remove_background/main/images/screenshot-2026-02-11-at-10.13.59pm.webp",
+      "readmeContent": "# This is a simple back ground remover for my students.  This is useful for makeing sprites you might need when making computer games.\n\n![Photo](images/screenshot-2026-02-11-at-10.13.59pm.webp)\n\n1 - upload a n image perferaly with white background.\n2 - This app will remove the backgound and return an the image as a png file.\n",
       "homepageUrl": "https://remove-background-jctech.streamlit.app/"
     },
     {
@@ -272,17 +292,17 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/ram-shi",
       "homepage": "https://omnisonic.github.io/ram-shi/",
       "created_at": "2024-08-13T22:11:51Z",
-      "updated_at": "2026-02-10T22:53:21Z",
-      "pushed_at": "2024-08-16T18:54:33Z",
+      "updated_at": "2026-02-12T06:17:35Z",
+      "pushed_at": "2026-02-12T06:17:31Z",
       "topics": [],
       "languages": {
         "CSS": 15887,
         "HTML": 14563,
         "Python": 2789
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/ram-shi/main/images/screenshot-2026-02-11-at-10.18.06pm.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-11-at-10.18.06pm.webp)\n\n\n",
       "homepageUrl": "https://omnisonic.github.io/ram-shi/"
     },
     {
@@ -300,8 +320,8 @@ const EMBEDDED_DATA = {
         "CSS": 103036
       },
       "hasReadme": true,
-      "screenshotUrl": "/images/repos/rudy.webp?v=1770845731944",
-      "readmeContent": "# Repository\n\n![Photo](/images/repos/rudy.webp)\n\n\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/rudy/main/images/screenshot-2026-02-10-at-2.56.59pm.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-10-at-2.56.59pm.webp)\n\n\n",
       "homepageUrl": "https://main.d2ii0lci9gh71j.amplifyapp.com/"
     },
     {
@@ -329,8 +349,8 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/Feel-Cosmic",
       "homepage": null,
       "created_at": "2024-04-28T01:25:58Z",
-      "updated_at": "2026-02-07T03:32:26Z",
-      "pushed_at": "2024-04-29T00:20:08Z",
+      "updated_at": "2026-02-12T06:21:33Z",
+      "pushed_at": "2026-02-12T06:21:29Z",
       "topics": [],
       "languages": {
         "CSS": 5219,
@@ -340,8 +360,8 @@ const EMBEDDED_DATA = {
         "Procfile": 43
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "\n**Image Generation App**\n\n**Overview**\n\nThis repository contains a Flask-based web application that generates images based on user input and allows users to download the generated images. The app uses HTMX for client-side rendering and implements rate limiting to prevent excessive requests.\n\n**Files**\n\n* **app.py**: The Flask app file that handles image generation, rate limiting, and API routes.\n* **templates/index.html**: The HTML template for the app's user interface.\n* **static/script.js**: The JavaScript file that handles client-side logic, including image generation, download, and rate limiting.\n\n**Features**\n\n* **Image Generation**: Generates an image based on user input and displays it on the page.\n* **Image Download**: Allows users to download the generated image.\n* **Rate Limiting**: Implements a cooldown period to prevent excessive requests to the image generation API.\n* **Error Handling**: Displays error messages to the user when an error occurs, including rate limiting errors (429).\n\n**Technical Details**\n\n* **Flask**: The web framework used to build the app.\n* **HTMX**: Used for client-side rendering and event handling.\n* **JavaScript**: Used for client-side logic and event handling.\n\n**Getting Started**\n\n1. Clone the repository: `git clone https://github.com/[your-username]/image-generation-app.git`\n2. Install the dependencies: `pip install -r requirements.txt`\n3. Run the app: `python app.py`\n4. Open the app in your web browser: `http://localhost:5000`\n\n**License**\n\nThis project is licensed under the [insert license name].\nThis project is open source and licensed under the MIT License, which allows for free use, modification, and distribution. You can use, modify, and distribute this project without any restrictions.\n\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/Feel-Cosmic/main/images/pngskoid6aaadede-4fb3-4698-a8f6-684d7786b067sktida48cca56-e6da-484e-a814-9c849652bcb3skt2024-04-27t04-04-03zske2024-04-28t04-04-03zsksbskv2021-08-06sigtcoudycnaiwrtfwxraccnnt4cpgubvqtvedydru6mbs.webp",
+      "readmeContent": "\n\n![Photo](images/pngskoid6aaadede-4fb3-4698-a8f6-684d7786b067sktida48cca56-e6da-484e-a814-9c849652bcb3skt2024-04-27t04-04-03zske2024-04-28t04-04-03zsksbskv2021-08-06sigtcoudycnaiwrtfwxraccnnt4cpgubvqtvedydru6mbs.webp)\n\n**Image Generation App**\n\n**Overview**\n\nThis repository contains a Flask-based web application that generates images based on user input and allows users to download the generated images. The app uses HTMX for client-side rendering and implements rate limiting to prevent excessive requests.\n\n**Files**\n\n* **app.py**: The Flask app file that handles image generation, rate limiting, and API routes.\n* **templates/index.html**: The HTML template for the app's user interface.\n* **static/script.js**: The JavaScript file that handles client-side logic, including image generation, download, and rate limiting.\n\n**Features**\n\n* **Image Generation**: Generates an image based on user input and displays it on the page.\n* **Image Download**: Allows users to download the generated image.\n* **Rate Limiting**: Implements a cooldown period to prevent excessive requests to the image generation API.\n* **Error Handling**: Displays error messages to the user when an error occurs, including rate limiting errors (429).\n\n**Technical Details**\n\n* **Flask**: The web framework used to build the app.\n* **HTMX**: Used for client-side rendering and event handling.\n* **JavaScript**: Used for client-side logic and event handling.\n\n**Getting Started**\n\n1. Clone the repository: `git clone https://github.com/[your-username]/image-generation-app.git`\n2. Install the dependencies: `pip install -r requirements.txt`\n3. Run the app: `python app.py`\n4. Open the app in your web browser: `http://localhost:5000`\n\n**License**\n\nThis project is licensed under the [insert license name].\nThis project is open source and licensed under the MIT License, which allows for free use, modification, and distribution. You can use, modify, and distribute this project without any restrictions.\n\n",
       "homepageUrl": ""
     },
     {
@@ -351,15 +371,15 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/dice_simulator",
       "homepage": "https://omnisonic.github.io/dice_simulator/",
       "created_at": "2024-02-07T22:37:50Z",
-      "updated_at": "2026-02-07T03:39:18Z",
-      "pushed_at": "2024-02-13T22:48:55Z",
+      "updated_at": "2026-02-12T06:22:57Z",
+      "pushed_at": "2026-02-12T06:22:54Z",
       "topics": [],
       "languages": {
         "HTML": 4038
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/dice_simulator/main/images/screenshot-2026-02-11-at-9.01.48pm.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-11-at-9.01.48pm.webp)\n\n\n",
       "homepageUrl": "https://omnisonic.github.io/dice_simulator/"
     },
     {
@@ -369,15 +389,15 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/note_read_trainer",
       "homepage": "https://omnisonic.github.io/note_read_trainer/",
       "created_at": "2023-12-14T21:54:12Z",
-      "updated_at": "2026-02-07T03:40:04Z",
-      "pushed_at": "2024-02-06T20:06:27Z",
+      "updated_at": "2026-02-12T06:24:01Z",
+      "pushed_at": "2026-02-12T06:23:57Z",
       "topics": [],
       "languages": {
         "HTML": 17214
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/note_read_trainer/main/images/screenshot-2026-02-11-at-9.01.19pm.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screenshot-2026-02-11-at-9.01.19pm.webp)\n\n\n",
       "homepageUrl": "https://omnisonic.github.io/note_read_trainer/"
     },
     {
@@ -387,35 +407,35 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/dnd_webspeech",
       "homepage": "https://omnisonic.github.io/dnd_webspeech/",
       "created_at": "2023-12-12T20:40:04Z",
-      "updated_at": "2026-02-07T03:37:40Z",
-      "pushed_at": "2024-04-03T01:21:22Z",
+      "updated_at": "2026-02-12T06:22:19Z",
+      "pushed_at": "2026-02-12T06:22:15Z",
       "topics": [],
       "languages": {
         "HTML": 6829
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "# dnd_webspeech\nUse the open sourse Dungeons and Dragons  5e api with web speech api\nA fun project for coding students with interest in Dungeons and Dragons \n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/dnd_webspeech/main/images/screenshot-2026-02-11-at-9.02.07pm.webp",
+      "readmeContent": "# dnd_webspeech\n\n![Photo](images/screenshot-2026-02-11-at-9.02.07pm.webp)\n\nUse the open sourse Dungeons and Dragons  5e api with web speech api\nA fun project for coding students with interest in Dungeons and Dragons \n",
       "homepageUrl": "https://omnisonic.github.io/dnd_webspeech/"
     },
     {
       "id": 711672929,
       "name": "phaser_typer",
-      "description": "A browser-based typing practice application built with JavaScript and HTML5, featuring dynamic exercise file loading capabilities and real-time performance tracking. Demonstrates expertise in front-end development, event handling, and file system integration for customizable learning experiences.",
+      "description": "A browser-based touch typing trainer built with Phaser.js that helps you master the keyboard while reading actual JavaScript. Fun project for coding students.",
       "html_url": "https://github.com/omnisonic/phaser_typer",
-      "homepage": null,
+      "homepage": "https://omnisonic.github.io/phaser_typer/",
       "created_at": "2023-10-30T00:30:02Z",
-      "updated_at": "2026-02-07T03:41:37Z",
-      "pushed_at": "2023-10-30T00:30:17Z",
+      "updated_at": "2026-02-12T19:08:47Z",
+      "pushed_at": "2026-02-12T19:08:43Z",
       "topics": [],
       "languages": {
-        "JavaScript": 4829,
-        "HTML": 383
+        "JavaScript": 25127,
+        "HTML": 702
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "#Phaser Typer\n\nis a Javacript touch typing game / touch typing trainer\n\nlightwight runs in the browser.\n\nLoads itself (game.js) as the typing exersize.\n\nCursor progress only if you get the letter correct.\n",
-      "homepageUrl": ""
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/phaser_typer/main/images/phastertyper.webp",
+      "readmeContent": "# ⌨️ Phaser Typer\n\n> **Learn to type by typing real code.** A browser-based touch typing trainer built with Phaser.js that helps you master the keyboard while reading actual JavaScript.\n\n![Typing Game Screenshot](images/phastertyper.webp)\n\n## 🎯 Why This Project?\n\n**For Coding Students:**\n- Practice typing with real JavaScript code - the same code that powers this game!\n- Get comfortable with symbols you'll use daily: `{}`, `[]`, `()`, `;`, `=>`, etc.\n- Build muscle memory for typing syntax without looking at the keyboard\n\n**For Typing Learners:**\n- Visual keyboard shows exactly which key to press next (highlighted in **green**)\n- Finger guidance tells you which finger to use for every key\n- Real-time feedback: correct keys advance the cursor, wrong keys shake the screen\n- No boring drills - you're typing actual working code!\n\n## ✨ Features\n\n| Feature | Description |\n|---------|-------------|\n| 🎮 **Visual Keyboard** | On-screen keyboard shows key locations with responsive layout |\n| 💚 **Target Highlight** | The next key to press glows green |\n| ❤️ **Press Feedback** | Keys turn red when pressed |\n| 🖐️ **Finger Guidance** | Text prompt shows which finger to use (e.g., \"Next: left hand index finger\") |\n| 📱 **Responsive** | Adapts to different screen sizes |\n| ⏸️ **Error Prevention** | Blocks browser shortcuts (Ctrl, Alt, F-keys, Tab) so you stay focused |\n| 🎯 **Score Tracking** | Earn points for every correct keystroke |\n| ⚡ **Shift Support** | Visual keyboard switches between lower/uppercase when Shift is held |\n\n## 🚀 Quick Start\n\nNo installation required! This game runs entirely in your browser.\n\n### Option 1: Open Directly (with a local server)\n```bash\n# Using Python 3\npython -m http.server 8000\n\n# Using Node.js (npx serve)\nnpx serve .\n\n# Using PHP\nphp -S localhost:8000\n```\n\nThen open `http://localhost:8000` in your browser.\n\n### Option 2: VS Code Live Server\nInstall the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension and click \"Go Live\".\n\n> ⚠️ **Note:** Due to browser security (CORS), you must serve the files through a web server rather than opening `index.html` directly with `file://`.\n\n## 🎓 How to Use\n\n1. **Start typing** the code shown on screen\n2. **Watch the green highlight** on the keyboard - that's your next key!\n3. **Read the finger guidance** - it tells you exactly which finger to use\n4. **Press keys correctly** to advance the cursor and earn points\n5. **Complete each line**, then press **Enter** to continue\n6. **Finish the entire file** to complete the exercise!\n\n### Typing Tips for Beginners\n\n- **Keep your fingers on the home row**: ASDF (left hand) and JKL; (right hand)\n- **Look at the screen, not your hands** - the visual keyboard is your guide\n- **Use the correct finger** for each key - this builds proper muscle memory\n- **Don't rush** - accuracy is more important than speed when learning\n\n## 🛠️ Tech Stack\n\n- **[Phaser 3](https://phaser.io/)** - HTML5 game framework\n- **Vanilla JavaScript** - No build tools, no bundlers, just clean JS\n- **HTML5 Canvas** - Hardware-accelerated rendering\n\n## 📁 Project Structure\n\n```\nphaser_typer/\n├── index.html          # Entry point - loads Phaser and game scripts\n├── practice_diagram.js # Main game logic, keyboard rendering, input handling\n├── game.js             # Source file used as the typing exercise\n├── bg.png              # Background image\n└── readme.md           # This file!\n```\n\n## 🎮 Customization\n\nWant to practice typing something else? Edit the `fetch()` call in `practice_diagram.js`:\n\n```javascript\n// Change this line to load any text file\nfetch('game.js')  // Try 'my-code.js', 'readme.md', etc.\n```\n\nOr modify the `lines` array directly to type custom content:\n\n```javascript\nlines = [\n    \"function hello() {\",\n    \"    console.log('Hello, World!');\",\n    \"}\"\n];\n```\n\n## 🔮 Roadmap\n\n- [ ] Combine keyboard map with typing exercises\n- [ ] Highlight current lesson character alongside pressed key indicators\n- [ ] Enhanced scoring with per-key error tracking\n- [ ] Save/load score sheets with session history\n- [ ] User accounts for progress tracking\n- [ ] AI-generated lessons based on error patterns\n- [ ] Custom topic selection for AI-tailored lessons\n\n## 🤝 Contributing\n\nThis is an open-source project perfect for:\n- **Beginners** learning JavaScript and game development\n- **Students** practicing touch typing\n- **Educators** teaching programming or typing skills\n\nFeel free to fork, modify, and share your improvements!\n\n## 📜 License\n\nThis project is open source. Use it, learn from it, and happy typing! ⌨️✨\n\n---\n\n> 💡 **Pro Tip:** The best way to improve your typing is consistent practice. Even 15 minutes a day will show results within weeks!\n",
+      "homepageUrl": "https://omnisonic.github.io/phaser_typer/"
     },
     {
       "id": 675112898,
@@ -424,8 +444,8 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/chat_photo_history",
       "homepage": "https://chat-photo-history.streamlit.app/",
       "created_at": "2023-08-05T20:27:06Z",
-      "updated_at": "2026-02-07T03:56:47Z",
-      "pushed_at": "2025-07-19T16:39:29Z",
+      "updated_at": "2026-02-12T06:01:39Z",
+      "pushed_at": "2026-02-12T06:01:35Z",
       "topics": [],
       "languages": {
         "Python": 35952,
@@ -433,8 +453,8 @@ const EMBEDDED_DATA = {
         "CSS": 467
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "# 🎉 Open Files: A Streamlit Chatbot for Image Metadata Analysis 📸\n\n## 📝 Overview\n🌟 This project analyzes image metadata and provides a comprehensive description of the image content. The chatbot uses the Gemini Pro AI vision API to extract metadata from images and generate a detailed response. Two modes are available: image analysis and image metadata extraction. 🤖\n\n## 🎯 Features\n🔹 **Image Analysis**: Upload an image or provide a URL to analyze image metadata\n💡 **Comprehensive Description**: Get a detailed description of the image content, including scene understanding, object detection, image classification, image analysis, entity recognition, and contextual information\n💬 **Chatbot Interface**: Interact with the chatbot using natural language input\n📝 **Chat History**: View the chat history and previous responses\n- **Scene Understanding**: Identifying the context and setting of the image, such as indoor, outdoor, or specific locations.\n\n- **Image Classification**: Categorizing the image into predefined categories, such as landscape, portrait, or abstract.\n- **Image Analysis**: Analyzing the image's visual features, such as colors, textures, and shapes.\n- **Entity Recognition**: Identifying and extracting specific information from the image, such as names, dates, or locations.\n- **Contextual Information**: Providing additional information about the image, such as the photographer's intent or the image's historical significance.\n\nBy combining these features, our AI powered app aims provides a comprehensive and accurate description of the image content, making it easier to understand and analyze the image metadata.\n\n\n## 🔑 Requirements\n🔑 **OpenRouter API Key**: Set environment variable `OPENROUTER_API_KEY`\n💻 **Streamlit**: Install using `pip install streamlit`\n📈 **Exiftool**: Install using `sudo apt install libimage-exiftool-perl`\n\n## 💻 Usage\n1️⃣ Run the chatbot by executing `streamlit run streamlit.py`\n2️⃣ Upload an image or provide a URL to analyze image metadata\n3️⃣ Interact with the chatbot using natural language input\n4️⃣ View the chat history and previous responses\n\n## 🗃️ Components\n📂 **streamlit.py**: The main Streamlit app that handles user input and displays chat responses\n🔍 **vision_func.py**: A Python module that provides the AI vision functionality using OpenRouter's API\n\n## 📝 License\n🔓 This project is licensed under the MIT License. See `LICENSE` for details.\n\n## 🤝 Contributing\n🎉 Contributions are welcome! If you'd like to help improve the chatbot or add new features, please submit a pull request.\n\n## 👏 Acknowledgments\n🙏 **Google Gemini Pro API**: Special thanks to the Google Gemini Pro API for providing the image analysis functionality\n🙏 **OpenRouter**: [OpenRouter](https://www.openrouter.com/) for routing the API\n🙏 **Streamlit**: [Streamlit](https://streamlit.io/) for providing the chatbot framework\n🙏 **PyExifTool**: [PyExifTool](https://pypi.org/project/PyExifTool/) for providing a Python interface to Exiftool\n🙏 **Exiftool**: [Exiftool](https://exiftool.org/) for providing a comprehensive metadata extraction tool\n\n## Additional\nThe chatbot also extracts metadata from images using the [IPTC](https://iptc.org/standards/photo-metadata/) standards for image metadata. Examples of the metadata that can be extracted or written:\n\n*   **IPTC.Caption**: Extracting the image caption or description\n*   **IPTC.Keywords**: Extracting keywords or tags associated with the image\n*   **IPTC.Credit**: Extracting the credit or attribution information for the image creator\n*   **IPTC.Contact**: Extracting the contact information for the image creator or owner\n\nBy incorporating IPTC metadata, the chatbot provides a more comprehensive understanding of the image content, including its context, meaning, and usage.\n\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/chat_photo_history/main/images/screenshot-2026-02-11-at-10.01.57pm.webp",
+      "readmeContent": "# 🎉 Open Files: A Streamlit Chatbot for Image Metadata Analysis 📸\n\n![Photo](images/screenshot-2026-02-11-at-10.01.57pm.webp)\n\n\n## 📝 Overview\n🌟 This project analyzes image metadata and provides a comprehensive description of the image content. The chatbot uses the Gemini Pro AI vision API to extract metadata from images and generate a detailed response. Two modes are available: image analysis and image metadata extraction. 🤖\n\n## 🎯 Features\n🔹 **Image Analysis**: Upload an image or provide a URL to analyze image metadata\n💡 **Comprehensive Description**: Get a detailed description of the image content, including scene understanding, object detection, image classification, image analysis, entity recognition, and contextual information\n💬 **Chatbot Interface**: Interact with the chatbot using natural language input\n📝 **Chat History**: View the chat history and previous responses\n- **Scene Understanding**: Identifying the context and setting of the image, such as indoor, outdoor, or specific locations.\n\n- **Image Classification**: Categorizing the image into predefined categories, such as landscape, portrait, or abstract.\n- **Image Analysis**: Analyzing the image's visual features, such as colors, textures, and shapes.\n- **Entity Recognition**: Identifying and extracting specific information from the image, such as names, dates, or locations.\n- **Contextual Information**: Providing additional information about the image, such as the photographer's intent or the image's historical significance.\n\nBy combining these features, our AI powered app aims provides a comprehensive and accurate description of the image content, making it easier to understand and analyze the image metadata.\n\n\n## 🔑 Requirements\n🔑 **OpenRouter API Key**: Set environment variable `OPENROUTER_API_KEY`\n💻 **Streamlit**: Install using `pip install streamlit`\n📈 **Exiftool**: Install using `sudo apt install libimage-exiftool-perl`\n\n## 💻 Usage\n1️⃣ Run the chatbot by executing `streamlit run streamlit.py`\n2️⃣ Upload an image or provide a URL to analyze image metadata\n3️⃣ Interact with the chatbot using natural language input\n4️⃣ View the chat history and previous responses\n\n## 🗃️ Components\n📂 **streamlit.py**: The main Streamlit app that handles user input and displays chat responses\n🔍 **vision_func.py**: A Python module that provides the AI vision functionality using OpenRouter's API\n\n## 📝 License\n🔓 This project is licensed under the MIT License. See `LICENSE` for details.\n\n## 🤝 Contributing\n🎉 Contributions are welcome! If you'd like to help improve the chatbot or add new features, please submit a pull request.\n\n## 👏 Acknowledgments\n🙏 **Google Gemini Pro API**: Special thanks to the Google Gemini Pro API for providing the image analysis functionality\n🙏 **OpenRouter**: [OpenRouter](https://www.openrouter.com/) for routing the API\n🙏 **Streamlit**: [Streamlit](https://streamlit.io/) for providing the chatbot framework\n🙏 **PyExifTool**: [PyExifTool](https://pypi.org/project/PyExifTool/) for providing a Python interface to Exiftool\n🙏 **Exiftool**: [Exiftool](https://exiftool.org/) for providing a comprehensive metadata extraction tool\n\n## Additional\nThe chatbot also extracts metadata from images using the [IPTC](https://iptc.org/standards/photo-metadata/) standards for image metadata. Examples of the metadata that can be extracted or written:\n\n*   **IPTC.Caption**: Extracting the image caption or description\n*   **IPTC.Keywords**: Extracting keywords or tags associated with the image\n*   **IPTC.Credit**: Extracting the credit or attribution information for the image creator\n*   **IPTC.Contact**: Extracting the contact information for the image creator or owner\n\nBy incorporating IPTC metadata, the chatbot provides a more comprehensive understanding of the image content, including its context, meaning, and usage.\n\n",
       "homepageUrl": "https://chat-photo-history.streamlit.app/"
     },
     {
@@ -480,16 +500,16 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/lonesoundranger",
       "homepage": "https://main.dzphqj22r74e6.amplifyapp.com/",
       "created_at": "2023-01-18T22:17:47Z",
-      "updated_at": "2026-02-10T23:02:19Z",
-      "pushed_at": "2023-03-30T01:19:35Z",
+      "updated_at": "2026-02-12T06:26:15Z",
+      "pushed_at": "2026-02-12T06:26:10Z",
       "topics": [],
       "languages": {
         "CSS": 596871,
         "HTML": 277022
       },
-      "hasReadme": false,
-      "screenshotUrl": null,
-      "readmeContent": null,
+      "hasReadme": true,
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/lonesoundranger/main/images/screen-shot-2023-03-08-at-4.13.39-pm.webp",
+      "readmeContent": "# Repository\n\n![Photo](images/screen-shot-2023-03-08-at-4.13.39-pm.webp)\n\n\n",
       "homepageUrl": "https://main.dzphqj22r74e6.amplifyapp.com/"
     },
     {
@@ -533,8 +553,8 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/album_landing_page",
       "homepage": "https://omnisonic.github.io/album_landing_page/",
       "created_at": "2022-05-16T04:13:18Z",
-      "updated_at": "2026-02-10T23:04:48Z",
-      "pushed_at": "2026-02-10T23:04:19Z",
+      "updated_at": "2026-02-11T21:49:58Z",
+      "pushed_at": "2026-02-11T21:49:55Z",
       "topics": [],
       "languages": {
         "HTML": 107978,
@@ -543,8 +563,8 @@ const EMBEDDED_DATA = {
         "CSS": 19692
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "#Work in progress. Copy code at your own risk.  \n\nThis Project makes a one page website for promoting recorded album.  It includes a music player , and links to the major music outlets such as apple music and Spotify.\n\nThis project seeks to automate the process of adding track name , artwork and music , to the webpage.\n\nThis project uses webscraping tools to get the information such as track name, artist name, album artwork from the internet and then inject them in to a web page with minimal input from the developer.\n\nThis program only scrapes data from bandcamp.  The album must be on bancamp for this program to work.\n\nThe input is the url to the bandcamp album.\n\nThe webpage will also has links to the various major music sources.  Those links will have to be set manually in a configuration file.",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/album_landing_page/main/images/screenshot-2026-02-10-at-3.07.33pm.webp",
+      "readmeContent": "#Work in progress. Copy code at your own risk.  \n\n![Photo](images/screenshot-2026-02-10-at-3.07.33pm.webp)\n\n\nThis Project makes a one page website for promoting recorded album.  It includes a music player , and links to the major music outlets such as apple music and Spotify.\n\nThis project seeks to automate the process of adding track name , artwork and music , to the webpage.\n\nThis project uses webscraping tools to get the information such as track name, artist name, album artwork from the internet and then inject them in to a web page with minimal input from the developer.\n\nThis program only scrapes data from bandcamp.  The album must be on bancamp for this program to work.\n\nThe input is the url to the bandcamp album.\n\nThe webpage will also has links to the various major music sources.  Those links will have to be set manually in a configuration file.",
       "homepageUrl": "https://omnisonic.github.io/album_landing_page/"
     },
     {
@@ -607,45 +627,6 @@ const EMBEDDED_DATA = {
       "hasReadme": true,
       "screenshotUrl": null,
       "readmeContent": "This is a starting point for creating custom themes for Pelican Static Webssite Generator.  This theme is based on the simple theme built into pelican.  To install this theme add this to you pelicanconf.py:\n\n```\nTHEME = \"<your_path_to_this_theme_on_your_machine>\"\n\n```\n\n- 2022-11-05  Edit: Removed all id and class attributes , changed footer tag to div.  This is to make it easier to convert web designs into custom themes.  I also moved the feeds section from base.html head into its own template called feeds.html.  if you want it include it in the base.html just use {% include feeds.html %}\n",
-      "homepageUrl": ""
-    },
-    {
-      "id": 487338986,
-      "name": "jctech_cheatsheets",
-      "description": "Cheetsheets Collection of Tech used by JCTECH",
-      "html_url": "https://github.com/omnisonic/jctech_cheatsheets",
-      "homepage": null,
-      "created_at": "2022-04-30T17:24:42Z",
-      "updated_at": "2022-04-30T17:24:42Z",
-      "pushed_at": "2022-04-30T22:31:26Z",
-      "topics": [],
-      "languages": {},
-      "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "This repo is a collection of cheatsheets created or extended by JCTECH.  \nInspired by https://github.com/rstacruz/cheatsheets/\n\n",
-      "homepageUrl": ""
-    },
-    {
-      "id": 487138440,
-      "name": "massively_theme",
-      "description": "premade theme adapted to pelican",
-      "html_url": "https://github.com/omnisonic/massively_theme",
-      "homepage": null,
-      "created_at": "2022-04-29T23:46:10Z",
-      "updated_at": "2022-05-06T22:08:54Z",
-      "pushed_at": "2022-05-07T02:25:04Z",
-      "topics": [],
-      "languages": {
-        "HTML": 273108,
-        "CSS": 255220,
-        "SCSS": 233971,
-        "JavaScript": 53337,
-        "Python": 5674,
-        "Makefile": 2465
-      },
-      "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "This project adapts a premade website template to a pelican theme.\n\n",
       "homepageUrl": ""
     },
     {
@@ -757,8 +738,8 @@ const EMBEDDED_DATA = {
       "html_url": "https://github.com/omnisonic/jcm_pelican",
       "homepage": "https://johnclarkemusic.com",
       "created_at": "2021-06-30T19:25:14Z",
-      "updated_at": "2026-02-08T04:59:34Z",
-      "pushed_at": "2025-11-06T15:59:18Z",
+      "updated_at": "2026-02-12T05:57:27Z",
+      "pushed_at": "2026-02-12T05:57:23Z",
       "topics": [
         "pelican"
       ],
@@ -770,8 +751,8 @@ const EMBEDDED_DATA = {
         "Shell": 748
       },
       "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "# jcm_pelican\n",
+      "screenshotUrl": "https://raw.githubusercontent.com/omnisonic/jcm_pelican/main/images/screenshot-2026-02-07-at-9.15.28am.webp",
+      "readmeContent": "# jcm_pelican\n\n![Photo](images/screenshot-2026-02-07-at-9.15.28am.webp)\n\n",
       "homepageUrl": "https://johnclarkemusic.com"
     },
     {
@@ -817,22 +798,6 @@ const EMBEDDED_DATA = {
       "hasReadme": true,
       "screenshotUrl": null,
       "readmeContent": "# gtypist_create\nThis is a pet project to automate the creation of gtypist lesson files using python.\n",
-      "homepageUrl": ""
-    },
-    {
-      "id": 270912394,
-      "name": "raspberrypi_hq_av_live_streamer",
-      "description": "Live stream in HD and High Quality Stereo Audio with Raspberry Pi",
-      "html_url": "https://github.com/omnisonic/raspberrypi_hq_av_live_streamer",
-      "homepage": null,
-      "created_at": "2020-06-09T05:36:34Z",
-      "updated_at": "2020-06-14T21:17:07Z",
-      "pushed_at": "2020-06-14T21:17:05Z",
-      "topics": [],
-      "languages": {},
-      "hasReadme": true,
-      "screenshotUrl": null,
-      "readmeContent": "# raspberrypi_hq_av_live_streamer\nLive stream in HD and High Quality Stereo Audio with Raspberry Pi\n\nffmpeg and bash scipting in progress\n",
       "homepageUrl": ""
     },
     {
